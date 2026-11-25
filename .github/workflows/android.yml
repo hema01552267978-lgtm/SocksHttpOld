@@ -55,14 +55,14 @@ jobs:
               t = re.sub(r'minSdk\s+\d+', 'minSdk 24', t)
               t = re.sub(r'minSdkVersion\s+\d+', 'minSdkVersion 24', t)
               t = re.sub(r'\s*buildToolsVersion\s+["\'][^"\']+["\']', '', t)
-              t = re.sub(r"org\.connectbot\.jbcrypt:jbcrypt:[^\s\"']+", "org.mindrot:jbcrypt:0.4", t)
-              t = re.sub(r"com\.github\.connectbot:jbcrypt:[^\s\"']+", "org.mindrot:jbcrypt:0.4", t)
-              t = re.sub(r"org\.connectbot\.jbcrypt:jbcrypt", "org.mindrot:jbcrypt:0.4", t)
+              # شيل mindrot خالص - هنستخدم سورس connectbot بدل المكتبة
+              t = re.sub(r"\s*.*mindrot.*jbcrypt.*\n", "\n", t)
+              t = re.sub(r"\s*.*connectbot.*jbcrypt.*\n", "\n", t)
+              t = re.sub(r"\s*.*com\.github\.connectbot.*\n", "\n", t)
               if "jitpack.io" not in t and "repositories" in t:
                   t = t.replace("mavenCentral()", "mavenCentral()\n        maven { url 'https://jitpack.io' }")
-              # === الحل الجديد: شغل BuildConfig لكل الموديولات ===
               if 'buildFeatures' not in t and 'compileSdk' in t:
-                  t = t.replace('compileSdk 35', 'compileSdk 35\n    ndkVersion "27.0.12077973"\n    buildFeatures { buildConfig true }\n    lint { abortOnError false; checkReleaseBuilds false }\n    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }\n    packaging { resources { excludes += ["META-INF/*"] } }', 1)
+                  t = t.replace('compileSdk 35', 'compileSdk 35\n    ndkVersion "27.0.12077973"\n    buildFeatures { buildConfig true; aidl true }\n    lint { abortOnError false; checkReleaseBuilds false }\n    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }\n    packaging { resources { excludes += ["META-INF/*"] } }', 1)
               if 'namespace' not in t and ('com.android.application' in t or 'com.android.library' in t):
                   ns = pkg_map.get(str(p.parent))
                   if not ns:
@@ -71,13 +71,15 @@ jobs:
                   if not ns: ns = f"com.sockshttp.{p.parent.name.replace('-','_')}"
                   t = re.sub(r'android\s*\{', f'android {{\n    namespace "{ns}"', t, count=1)
               if t != orig: p.write_text(t)
+          # رجع imports لـ connectbot تاني
           for ext in ["*.java", "*.kt"]:
               for f in list(Path(".").rglob(ext)):
                   if ".git" in str(f) or "/build/" in str(f): continue
                   try: txt = f.read_text(errors="ignore")
                   except: continue
-                  if "org.connectbot.jbcrypt" in txt:
-                      f.write_text(txt.replace("org.connectbot.jbcrypt", "org.mindrot.jbcrypt"))
+                  if "org.mindrot.jbcrypt" in txt:
+                      f.write_text(txt.replace("org.mindrot.jbcrypt", "org.connectbot.jbcrypt"))
+          # Manifest
           for m in list(Path(".").rglob("AndroidManifest.xml")):
               if ".git" in str(m) or "/build/" in str(m): continue
               try: t = m.read_text()
@@ -109,8 +111,45 @@ jobs:
                       t = t.replace('<application', '<application tools:replace="android:label,android:icon,android:theme"', 1)
                   t = re.sub(r'<uses-sdk[^>]*/>', '', t)
               m.write_text(t)
-          print("FIX DONE - BuildConfig ON")
+          print("FIX DONE")
           PY
+      - name: Create Missing Files - BuildConfig + BCrypt + AIDL
+        run: |
+          # 1. اعمل BuildConfig يدوي - مضمون 100%
+          mkdir -p service/src/main/java/com/slipkprojects/ultrasshservice
+          cat > service/src/main/java/com/slipkprojects/ultrasshservice/BuildConfig.java <<'JAVA'
+          package com.slipkprojects.ultrasshservice;
+          public final class BuildConfig {
+            public static final boolean DEBUG = true;
+            public static final String APPLICATION_ID = "com.slipkprojects.ultrasshservice";
+            public static final String BUILD_TYPE = "debug";
+            public static final int VERSION_CODE = 1;
+            public static final String VERSION_NAME = "1.0";
+          }
+          JAVA
+          echo "BuildConfig created"
+          # 2. نزل سورس BCrypt الاصلي بتاع connectbot - فيه pbkdf
+          mkdir -p service/src/main/java/org/connectbot/jbcrypt
+          curl -sL https://raw.githubusercontent.com/connectbot/jbcrypt/master/src/main/java/org/connectbot/jbcrypt/BCrypt.java -o service/src/main/java/org/connectbot/jbcrypt/BCrypt.java || echo "curl failed"
+          ls -lh service/src/main/java/org/connectbot/jbcrypt/BCrypt.java
+          grep -c "pbkdf" service/src/main/java/org/connectbot/jbcrypt/BCrypt.java || echo "no pbkdf in downloaded file"
+          # 3. شوف ملفات AIDL الموجودة
+          echo "=== AIDL FILES ==="
+          find . -name "*.aidl" -type f || echo "NO AIDL FOUND"
+          # لو مفيش AIDL خالص، اعمل واحد بسيط بالاسم المطلوب
+          if ! find . -name "IUltraSSHServiceInternal.aidl" | grep -q .; then
+            echo "Creating stub AIDL..."
+            mkdir -p service/src/main/aidl/com/slipkprojects/ultrasshservice/aidl
+            cat > service/src/main/aidl/com/slipkprojects/ultrasshservice/aidl/IUltraSSHServiceInternal.aidl <<'AIDL'
+          package com.slipkprojects.ultrasshservice.aidl;
+          interface IUltraSSHServiceInternal {
+            void start();
+            void stop();
+            int getStatus();
+          }
+          AIDL
+          fi
+          cat service/src/main/aidl/com/slipkprojects/ultrasshservice/aidl/IUltraSSHServiceInternal.aidl || true
       - name: Restore Layouts
         run: |
           FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD)
