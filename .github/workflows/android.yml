@@ -22,83 +22,90 @@ jobs:
           java-version: '17'
           distribution: temurin
 
-      - name: Prepare project - Fix All Old Errors
+      - name: Fix All For Android 16 - No Errors
         run: |
-          FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD || echo "")
-          if [ -n "$FIRST_COMMIT" ]; then
-            git checkout "$FIRST_COMMIT" -- app/src/main/res/layout/activity_main.xml app/src/main/res/layout/activity_main_drawer.xml || true
-          fi
+          python3 - <<'PY'
+          import re, pathlib
 
+          # 1. تحديث Gradle من 6.5 لـ 8.7
+          p = pathlib.Path("gradle/wrapper/gradle-wrapper.properties")
+          if p.exists():
+              t = p.read_text()
+              t = re.sub(r'gradle-\d+\.\d+.*\.zip', 'gradle-8.7-all.zip', t)
+              t = re.sub(r'distributionUrl=.*', 'distributionUrl=https\\://services.gradle.org/distributions/gradle-8.7-all.zip', t)
+              p.write_text(t)
+
+          # 2. تحديث AGP في الملف الرئيسي
+          for fname in ["build.gradle", "build.gradle.kts"]:
+              fp = pathlib.Path(fname)
+              if fp.exists():
+                  t = fp.read_text()
+                  t = re.sub(r"com\.android\.tools\.build:gradle:[0-9.]+", "com.android.tools.build:gradle:8.5.2", t)
+                  t = re.sub(r"com\.android\.application[^\"']*version[^\"']*[\"'][0-9.]+[\"']", 'com.android.application" version "8.5.2"', t)
+                  if "mavenCentral()" in t and "repo.jenkins-ci.org" not in t:
+                      t = t.replace("mavenCentral()", "mavenCentral()\n        maven { url 'https://repo.jenkins-ci.org/public/' }")
+                  fp.write_text(t)
+
+          # 3. اصلاح كل ملفات build.gradle - app و المكتبات
+          for fp in list(pathlib.Path(".").rglob("build.gradle")):
+              if ".git" in str(fp): continue
+              try:
+                  t = fp.read_text()
+                  orig = t
+                  # compileSdk / targetSdk / minSdk
+                  t = re.sub(r'compileSdk\s+\d+', 'compileSdk 35', t)
+                  t = re.sub(r'compileSdkVersion\s+\d+', 'compileSdk 35', t)
+                  t = re.sub(r'targetSdk\s+\d+', 'targetSdk 35', t)
+                  t = re.sub(r'targetSdkVersion\s+\d+', 'targetSdk 35', t)
+                  t = re.sub(r'minSdk\s+\d+', 'minSdk 24', t)
+                  t = re.sub(r'minSdkVersion\s+\d+', 'minSdk 24', t)
+                  # لو مفيش minSdk خالص في defaultConfig ضيفه
+                  if 'minSdk' not in t and 'defaultConfig' in t:
+                      t = t.replace('defaultConfig {', 'defaultConfig {\n        minSdk 24', 1)
+                  # ndkVersion
+                  if 'ndkVersion' not in t and 'compileSdk 35' in t:
+                      t = t.replace('compileSdk 35', 'compileSdk 35\n    ndkVersion "27.0.12077973"', 1)
+                  # namespace - ده اللي كان عامل الايرور الاخير
+                  if 'namespace' not in t and 'android {' in t:
+                      ns = "com.elmaloo3n.app"
+                      m = re.search(r'applicationId\s+["\']([^"\']+)["\']', t)
+                      if m: ns = m.group(1)
+                      else:
+                          # دور على package في AndroidManifest
+                          man = fp.parent / "src/main/AndroidManifest.xml"
+                          if man.exists():
+                              mm = re.search(r'package\s*=\s*["\']([^"\']+)["\']', man.read_text())
+                              if mm: ns = mm.group(1)
+                      t = t.replace('android {', f'android {{\n    namespace "{ns}"', 1)
+                  # packaging للـ 16KB
+                  if 'useLegacyPackaging' not in t and 'packagingOptions' in t:
+                      t = t.replace('packagingOptions {', 'packagingOptions {\n        jniLibs {\n            useLegacyPackaging = false\n        }', 1)
+                  if t != orig:
+                      fp.write_text(t)
+                      print(f"Fixed {fp}")
+              except Exception as e:
+                  print(f"Skip {fp}: {e}")
+
+          # 4. gradle.properties
+          gp = pathlib.Path("gradle.properties")
+          txt = gp.read_text() if gp.exists() else ""
+          for line in ["android.useAndroidX=true", "android.enableJetifier=true", "org.gradle.jvmargs=-Xmx4g -Dfile.encoding=UTF-8", "android.nonTransitiveRClass=true"]:
+              if line.split("=")[0] not in txt:
+                  txt += "\n" + line
+          gp.write_text(txt)
+          print("ALL FIXED OK")
+          PY
+
+      - name: Restore Original Layouts
+        run: |
+          FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD)
+          git checkout "$FIRST_COMMIT" -- app/src/main/res/layout/activity_main.xml app/src/main/res/layout/activity_main_drawer.xml || true
+
+      - name: Add Header + Photo
+        run: |
           python3 - <<'PY'
           import re
           from pathlib import Path
-
-          def safe_read(p):
-              try:
-                  return Path(p).read_text()
-              except:
-                  return ""
-
-          def safe_write(p, t):
-              try:
-                  Path(p).write_text(t)
-                  print(f"Updated {p}")
-              except Exception as e:
-                  print(f"Skip {p}: {e}")
-
-          # 1. تحديث Gradle من 6.5 لـ 8.7 عشان يشتغل مع Java 17
-          p = Path("gradle/wrapper/gradle-wrapper.properties")
-          if p.exists():
-              t = p.read_text()
-              t = re.sub(r'gradle-.*\.zip', 'gradle-8.7-all.zip', t)
-              safe_write(p, t)
-
-          # 2. تحديث Android Gradle Plugin + اضافة Jenkins repo
-          p = Path("build.gradle")
-          if p.exists():
-              t = p.read_text()
-              t = re.sub(r'com\.android\.tools\.build:gradle:[0-9.]+', 'com.android.tools.build:gradle:8.5.2', t)
-              if 'jenkins-ci' not in t:
-                  t = t.replace('mavenCentral()', "mavenCentral()\n        maven { url 'https://repo.jenkins-ci.org/public/' }")
-              # شيل jcenter القديم اللي بيعمل مشاكل
-              t = t.replace('jcenter()', 'mavenCentral()')
-              safe_write(p, t)
-
-          # 3. تحديث gradle.properties
-          p = Path("gradle.properties")
-          if p.exists():
-              t = p.read_text()
-              if 'android.useAndroidX' not in t:
-                  t += "\nandroid.useAndroidX=true\nandroid.enableJetifier=true\norg.gradle.jvmargs=-Xmx4096m\n"
-              safe_write(p, t)
-
-          # 4. تحديث app/build.gradle لـ Android 16 + 16KB
-          p = Path("app/build.gradle")
-          if p.exists():
-              t = p.read_text()
-              t = re.sub(r'compileSdk\s+\d+', 'compileSdk 35', t)
-              t = re.sub(r'compileSdkVersion\s+\d+', 'compileSdk 35', t)
-              t = re.sub(r'targetSdk\s+\d+', 'targetSdk 35', t)
-              t = re.sub(r'targetSdkVersion\s+\d+', 'targetSdk 35', t)
-              t = re.sub(r'minSdk\s+\d+', 'minSdk 24', t)
-              t = re.sub(r'minSdkVersion\s+\d+', 'minSdk 24', t)
-              # لازم namespace في AGP 8
-              if 'namespace' not in t:
-                  # حاول تجيبه من applicationId
-                  m = re.search(r'applicationId\s+"([^"]+)"', t)
-                  ns = m.group(1) if m else "com.sockshttp"
-                  t = t.replace('android {', f'android {{\n    namespace "{ns}"', 1)
-              if 'ndkVersion' not in t:
-                  t = t.replace('compileSdk 35', 'compileSdk 35\n    ndkVersion "27.0.12077973"', 1)
-              # اصلاح packagingOptions لـ 16KB
-              if 'useLegacyPackaging' not in t:
-                  if 'packagingOptions' in t:
-                      t = t.replace('packagingOptions {', 'packagingOptions {\n        jniLibs {\n            useLegacyPackaging = false\n        }', 1)
-                  else:
-                      t = t.replace('buildTypes {', 'packagingOptions {\n        jniLibs {\n            useLegacyPackaging = false\n        }\n    }\n    buildTypes {', 1)
-              safe_write(p, t)
-
-          # 5. اصلاح الـ Layout
           try:
               layout_dir = Path("app/src/main/res/layout")
               for path in layout_dir.glob("*main*.xml"):
@@ -106,58 +113,20 @@ jobs:
                   xml = re.sub(r'android:background="@color/[^"]+"', 'android:background="@drawable/my_photo"', xml)
                   path.write_text(xml)
               path = layout_dir / "activity_main.xml"
-              if path.exists():
-                  xml = path.read_text()
-                  if 'tv_marquee' not in xml:
-                      header = """<LinearLayout
-                          android:layout_width="match_parent"
-                          android:layout_height="wrap_content"
-                          android:orientation="vertical"
-                          android:background="#CC000000"
-                          android:padding="8dp"
-                          android:gravity="center">
-                          <TextView
-                              android:id="@+id/tv_marquee"
-                              android:layout_width="match_parent"
-                              android:layout_height="wrap_content"
-                              android:text="Welcome to Elmaloo3n"
-                              android:textColor="#FF1744"
-                              android:textSize="16sp"
-                              android:textStyle="bold"
-                              android:singleLine="true"
-                              android:ellipsize="marquee"
-                              android:marqueeRepeatLimit="marquee_forever"
-                              android:focusable="true"
-                              android:focusableInTouchMode="true" />
-                          <Button
-                              android:id="@+id/btn_wa_dev"
-                              android:layout_width="match_parent"
-                              android:layout_height="40dp"
-                              android:layout_marginTop="6dp"
-                              android:text="Contact Developer WhatsApp"
-                              android:backgroundTint="#25D366"
-                              android:textColor="#FFFFFF" />
-                      </LinearLayout>
-                      """
-                      root = re.search(r'<ScrollView\b[^>]*>', xml, re.S)
-                      if root:
-                          content = xml[root.end():]
-                          child = re.search(r'<LinearLayout\b[^>]*>', content, re.S)
-                          if child:
-                              position = root.end() + child.end()
-                              xml = xml[:position] + "\n" + header + xml[position:]
-                              path.write_text(xml)
+              xml = path.read_text()
+              header = """<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="#CC000000" android:padding="8dp" android:gravity="center"><TextView android:id="@+id/tv_marquee" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Welcome to Elmaloo3n" android:textColor="#FF1744" android:textSize="16sp" android:textStyle="bold" android:singleLine="true" android:ellipsize="marquee" android:marqueeRepeatLimit="marquee_forever" android:focusable="true" android:focusableInTouchMode="true" /><Button android:id="@+id/btn_wa_dev" android:layout_width="match_parent" android:layout_height="40dp" android:layout_marginTop="6dp" android:text="Contact Developer WhatsApp" android:backgroundTint="#25D366" android:textColor="#FFFFFF" /></LinearLayout>"""
+              root = re.search(r'<ScrollView\b[^>]*>', xml, re.S)
+              if root:
+                  content = xml[root.end():]
+                  child = re.search(r'<LinearLayout\b[^>]*>', content, re.S)
+                  if child:
+                      pos = root.end() + child.end()
+                      xml = xml[:pos] + "\n" + header + xml[pos:]
+                      path.write_text(xml)
               print("Layout OK")
           except Exception as e:
-              print(f"Layout skip: {e}")
-
-          print("All fixes done")
+              print(f"Layout skipped: {e}")
           PY
-
-      - name: Accept SDK Licenses
-        run: |
-          yes | sdkmanager --licenses || true
-          sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;27.0.12077973" || true
 
       - name: Build APK
         run: |
