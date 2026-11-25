@@ -1,15 +1,9 @@
 name: Android CI
-
 on:
   push:
-
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      ANDROID_HOME: /usr/local/lib/android/sdk
-      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,87 +16,108 @@ jobs:
           java-version: '17'
           distribution: temurin
 
-      - name: Fix All For Android 16 - No Errors
+      - name: Fix All Old Project Problems
         run: |
           python3 - <<'PY'
           import re, pathlib
 
-          # 1. تحديث Gradle من 6.5 لـ 8.7
+          # 1. حدث Gradle من 6.5 لـ 8.7
           p = pathlib.Path("gradle/wrapper/gradle-wrapper.properties")
           if p.exists():
               t = p.read_text()
-              t = re.sub(r'gradle-\d+\.\d+.*\.zip', 'gradle-8.7-all.zip', t)
-              t = re.sub(r'distributionUrl=.*', 'distributionUrl=https\\://services.gradle.org/distributions/gradle-8.7-all.zip', t)
+              t = re.sub(r'gradle-.*\.zip', 'gradle-8.7-all.zip', t)
               p.write_text(t)
 
-          # 2. تحديث AGP في الملف الرئيسي
-          for fname in ["build.gradle", "build.gradle.kts"]:
-              fp = pathlib.Path(fname)
-              if fp.exists():
-                  t = fp.read_text()
-                  t = re.sub(r"com\.android\.tools\.build:gradle:[0-9.]+", "com.android.tools.build:gradle:8.5.2", t)
-                  t = re.sub(r"com\.android\.application[^\"']*version[^\"']*[\"'][0-9.]+[\"']", 'com.android.application" version "8.5.2"', t)
-                  if "mavenCentral()" in t and "repo.jenkins-ci.org" not in t:
-                      t = t.replace("mavenCentral()", "mavenCentral()\n        maven { url 'https://repo.jenkins-ci.org/public/' }")
-                  fp.write_text(t)
+          # 2. حدث AGP في build.gradle الرئيسي
+          p = pathlib.Path("build.gradle")
+          if p.exists():
+              t = p.read_text()
+              t = re.sub(r"com\.android\.tools\.build:gradle:[^'\"]+", "com.android.tools.build:gradle:8.5.2", t)
+              # شيل jcenter القديم اللي بيعمل مشاكل
+              t = t.replace("jcenter()", "mavenCentral()")
+              # ضيف repo بتاع jenkins لو مش موجود
+              if "repo.jenkins-ci.org" not in t:
+                  t = t.replace("mavenCentral()", "mavenCentral()\n        maven { url 'https://repo.jenkins-ci.org/public/' }")
+              p.write_text(t)
 
-          # 3. اصلاح كل ملفات build.gradle - app و المكتبات
-          for fp in list(pathlib.Path(".").rglob("build.gradle")):
-              if ".git" in str(fp): continue
+          # 3. صلح كل ملفات build.gradle (app + المكتبات)
+          for f in list(pathlib.Path(".").rglob("build.gradle")):
+              if ".git" in str(f): continue
               try:
-                  t = fp.read_text()
+                  t = f.read_text()
                   orig = t
-                  # compileSdk / targetSdk / minSdk
                   t = re.sub(r'compileSdk\s+\d+', 'compileSdk 35', t)
                   t = re.sub(r'compileSdkVersion\s+\d+', 'compileSdk 35', t)
                   t = re.sub(r'targetSdk\s+\d+', 'targetSdk 35', t)
                   t = re.sub(r'targetSdkVersion\s+\d+', 'targetSdk 35', t)
                   t = re.sub(r'minSdk\s+\d+', 'minSdk 24', t)
                   t = re.sub(r'minSdkVersion\s+\d+', 'minSdk 24', t)
-                  # لو مفيش minSdk خالص في defaultConfig ضيفه
-                  if 'minSdk' not in t and 'defaultConfig' in t:
-                      t = t.replace('defaultConfig {', 'defaultConfig {\n        minSdk 24', 1)
-                  # ndkVersion
-                  if 'ndkVersion' not in t and 'compileSdk 35' in t:
-                      t = t.replace('compileSdk 35', 'compileSdk 35\n    ndkVersion "27.0.12077973"', 1)
-                  # namespace - ده اللي كان عامل الايرور الاخير
-                  if 'namespace' not in t and 'android {' in t:
-                      ns = "com.elmaloo3n.app"
-                      m = re.search(r'applicationId\s+["\']([^"\']+)["\']', t)
-                      if m: ns = m.group(1)
-                      else:
-                          # دور على package في AndroidManifest
-                          man = fp.parent / "src/main/AndroidManifest.xml"
+                  # شيل ndkVersion القديم وحط الجديد
+                  t = re.sub(r'ndkVersion\s+"[^"]+"', 'ndkVersion "27.0.12077973"', t)
+                  if 'compileSdk 35' in t and 'ndkVersion' not in t:
+                      t = t.replace('compileSdk 35', 'compileSdk 35\n    ndkVersion "27.0.12077973"')
+                  # لازم namespace في AGP 8
+                  if 'com.android.application' in t or 'com.android.library' in t:
+                      if 'namespace' not in t:
+                          # هات package من الـ Manifest بتاع نفس المجلد
+                          pkg = "com.elmaloo3n.app"
+                          man = f.parent / "src/main/AndroidManifest.xml"
                           if man.exists():
-                              mm = re.search(r'package\s*=\s*["\']([^"\']+)["\']', man.read_text())
-                              if mm: ns = mm.group(1)
-                      t = t.replace('android {', f'android {{\n    namespace "{ns}"', 1)
-                  # packaging للـ 16KB
+                              m = man.read_text()
+                              mm = re.search(r'package="([^"]+)"', m)
+                              if mm: pkg = mm.group(1)
+                          else:
+                              mm = re.search(r'applicationId\s+"([^"]+)"', t)
+                              if mm: pkg = mm.group(1)
+                              mm2 = re.search(r'applicationId\s+["\']([^"\']+)', t)
+                              if mm2: pkg = mm2.group(1)
+                          t = re.sub(r'(android\s*\{)', r'\1\n    namespace "' + pkg + '"', t, count=1)
+                  # شيل useLegacyPackaging لو عمل مشكلة
                   if 'useLegacyPackaging' not in t and 'packagingOptions' in t:
-                      t = t.replace('packagingOptions {', 'packagingOptions {\n        jniLibs {\n            useLegacyPackaging = false\n        }', 1)
+                      t = t.replace('packagingOptions {', 'packagingOptions {\n        jniLibs {\n            useLegacyPackaging = false\n        }')
                   if t != orig:
-                      fp.write_text(t)
-                      print(f"Fixed {fp}")
+                      f.write_text(t)
+                      print(f"fixed {f}")
               except Exception as e:
-                  print(f"Skip {fp}: {e}")
+                  print(f"skip {f}: {e}")
 
-          # 4. gradle.properties
-          gp = pathlib.Path("gradle.properties")
-          txt = gp.read_text() if gp.exists() else ""
-          for line in ["android.useAndroidX=true", "android.enableJetifier=true", "org.gradle.jvmargs=-Xmx4g -Dfile.encoding=UTF-8", "android.nonTransitiveRClass=true"]:
-              if line.split("=")[0] not in txt:
-                  txt += "\n" + line
-          gp.write_text(txt)
-          print("ALL FIXED OK")
+          # 4. صلح gradle.properties
+          p = pathlib.Path("gradle.properties")
+          t = p.read_text() if p.exists() else ""
+          if "android.useAndroidX" not in t: t += "\nandroid.useAndroidX=true\n"
+          if "android.enableJetifier" not in t: t += "android.enableJetifier=true\n"
+          if "org.gradle.jvmargs" not in t: t += "org.gradle.jvmargs=-Xmx4g -Dfile.encoding=UTF-8\n"
+          p.write_text(t)
+
+          # 5. اهم خطوة: صلح Manifest merger failed
+          for man in list(pathlib.Path(".").rglob("AndroidManifest.xml")):
+              if ".git" in str(man): continue
+              try:
+                  t = man.read_text()
+                  orig = t
+                  # شيل package من المانيفست لان AGP 8 بياخده من namespace
+                  t = re.sub(r'\s+package="[^"]+"', '', t, count=1)
+                  # ضيف tools لو مش موجود
+                  if 'xmlns:tools=' not in t:
+                      t = t.replace('<manifest', '<manifest xmlns:tools="http://schemas.android.com/tools"', 1)
+                  # لو ده مانيفست المكتبة، شيل application اللي بيعمل خناقة
+                  is_lib = 'src/main/AndroidManifest.xml' in str(man) and 'app' not in str(man).split('/')[0:2]
+                  # في كل الاحوال: خلي الـ application يقبل الدمج
+                  t = re.sub(r'<application', '<application tools:replace="android:label,android:icon,android:theme,android:allowBackup,android:supportsRtl"', t, count=1)
+                  # لو فيه activity مكررة، خليه يعمل replace
+                  # شيل اي android:allowBackup مكرر
+                  if t != orig:
+                      man.write_text(t)
+                      print(f"fixed manifest {man}")
+              except Exception as e:
+                  print(f"skip manifest {man}: {e}")
+          print("ALL FIXED")
           PY
 
-      - name: Restore Original Layouts
+      - name: Prepare Layout - Keep Your Design
         run: |
           FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD)
           git checkout "$FIRST_COMMIT" -- app/src/main/res/layout/activity_main.xml app/src/main/res/layout/activity_main_drawer.xml || true
-
-      - name: Add Header + Photo
-        run: |
           python3 - <<'PY'
           import re
           from pathlib import Path
@@ -114,18 +129,19 @@ jobs:
                   path.write_text(xml)
               path = layout_dir / "activity_main.xml"
               xml = path.read_text()
-              header = """<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="#CC000000" android:padding="8dp" android:gravity="center"><TextView android:id="@+id/tv_marquee" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Welcome to Elmaloo3n" android:textColor="#FF1744" android:textSize="16sp" android:textStyle="bold" android:singleLine="true" android:ellipsize="marquee" android:marqueeRepeatLimit="marquee_forever" android:focusable="true" android:focusableInTouchMode="true" /><Button android:id="@+id/btn_wa_dev" android:layout_width="match_parent" android:layout_height="40dp" android:layout_marginTop="6dp" android:text="Contact Developer WhatsApp" android:backgroundTint="#25D366" android:textColor="#FFFFFF" /></LinearLayout>"""
-              root = re.search(r'<ScrollView\b[^>]*>', xml, re.S)
-              if root:
-                  content = xml[root.end():]
-                  child = re.search(r'<LinearLayout\b[^>]*>', content, re.S)
-                  if child:
-                      pos = root.end() + child.end()
-                      xml = xml[:pos] + "\n" + header + xml[pos:]
-                      path.write_text(xml)
+              if "tv_marquee" not in xml:
+                  header = """<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="#CC000000" android:padding="8dp" android:gravity="center"><TextView android:id="@+id/tv_marquee" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Welcome to Elmaloo3n" android:textColor="#FF1744" android:textSize="16sp" android:textStyle="bold" android:singleLine="true" android:ellipsize="marquee" android:marqueeRepeatLimit="marquee_forever" android:focusable="true" android:focusableInTouchMode="true" /><Button android:id="@+id/btn_wa_dev" android:layout_width="match_parent" android:layout_height="40dp" android:layout_marginTop="6dp" android:text="Contact Developer WhatsApp" android:backgroundTint="#25D366" android:textColor="#FFFFFF" /></LinearLayout>"""
+                  root = re.search(r'<ScrollView\b[^>]*>', xml, re.S)
+                  if root:
+                      content = xml[root.end():]
+                      child = re.search(r'<LinearLayout\b[^>]*>', content, re.S)
+                      if child:
+                          pos = root.end() + child.end()
+                          xml = xml[:pos] + "\n" + header + xml[pos:]
+                          path.write_text(xml)
               print("Layout OK")
           except Exception as e:
-              print(f"Layout skipped: {e}")
+              print(f"Layout skip: {e}")
           PY
 
       - name: Build APK
