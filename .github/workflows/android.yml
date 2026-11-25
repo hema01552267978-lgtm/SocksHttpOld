@@ -19,7 +19,7 @@ jobs:
           java-version: '17'
           distribution: temurin
 
-      - name: Fix All - Gradle + Namespace + Manifest
+      - name: Fix All - Gradle + Namespace + Manifest + Dependencies
         run: |
           python3 - <<'PY'
           import re
@@ -36,6 +36,9 @@ jobs:
           if p.exists():
               t = p.read_text()
               t = re.sub(r"com\.android\.tools\.build:gradle:[0-9.]+", "com.android.tools.build:gradle:8.5.2", t)
+              # ضيف JitPack + Jenkins في الملف الرئيسي
+              if "jitpack.io" not in t:
+                  t = t.replace("mavenCentral()", "mavenCentral()\n        maven { url 'https://jitpack.io' }\n        maven { url 'https://repo.jenkins-ci.org/public/' }")
               p.write_text(t)
 
           # 2. اقرا package من كل Manifest قبل ما تمسحه
@@ -54,7 +57,7 @@ jobs:
                       cur = cur.parent
                   print(f"found {mm.group(1)} -> {cur}")
 
-          # 3. حط namespace + SDK 35 في كل build.gradle
+          # 3. حط namespace + SDK 35 + اصلاح jbcrypt في كل build.gradle
           for p in list(Path(".").rglob("build.gradle")):
               if ".git" in str(p) or "/build/" in str(p): continue
               try: t = p.read_text()
@@ -64,6 +67,16 @@ jobs:
               t = re.sub(r'targetSdk\s+\d+', 'targetSdk 35', t)
               t = re.sub(r'minSdk\s+\d+', 'minSdk 24', t)
               t = re.sub(r'minSdkVersion\s+\d+', 'minSdkVersion 24', t)
+
+              # اصلاح jbcrypt الميتة
+              if "org.connectbot.jbcrypt" in t:
+                  t = t.replace("org.connectbot.jbcrypt:jbcrypt:1.0.0", "com.github.connectbot:jbcrypt:1.0.0")
+                  t = t.replace("org.connectbot.jbcrypt:jbcrypt", "com.github.connectbot:jbcrypt")
+                  print(f"fixed jbcrypt in {p}")
+
+              # ضيف JitPack لو مش موجود
+              if "jitpack.io" not in t and "repositories" in t:
+                  t = t.replace("mavenCentral()", "mavenCentral()\n        maven { url 'https://jitpack.io' }")
 
               if 'namespace' not in t and ('com.android.application' in t or 'com.android.library' in t):
                   ns = pkg_map.get(str(p.parent))
@@ -79,7 +92,7 @@ jobs:
                   t = t.replace('compileSdk 35', 'compileSdk 35\n    ndkVersion "27.0.12077973"', 1)
               if t != orig: p.write_text(t)
 
-          # 4. دلوقتي امسح package من Manifests وصلح الخناقات
+          # 4. امسح package من Manifests وصلح الخناقات
           for m in list(Path(".").rglob("AndroidManifest.xml")):
               if ".git" in str(m) or "/build/" in str(m): continue
               try: t = m.read_text()
