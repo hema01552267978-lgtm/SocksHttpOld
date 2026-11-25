@@ -10,6 +10,7 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
       - run: |
+          sed -i 's/mavenCentral()/maven { url "https:\/\/://googleapis.com\/maven2\/" }\n        mavenCentral()/g' build.gradle
           sed -i 's/org.connectbot.jbcrypt:jbcrypt:1.0.0/org.mindrot:jbcrypt:0.4/g' service/build.gradle
           sed -i '/repo.spring.io/d' build.gradle
           find service/src -name "*.java" -exec sed -i 's/org.connectbot.jbcrypt.BCrypt/org.mindrot.jbcrypt.BCrypt/g' {} +
