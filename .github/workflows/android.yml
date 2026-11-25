@@ -5,15 +5,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
       - run: |
+          FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD)
+          git checkout $FIRST_COMMIT -- app/src/main/res/layout/activity_main.xml app/src/main/res/layout/activity_main_drawer.xml
           sed -i 's/org.connectbot.jbcrypt:jbcrypt:1.0.0/org.mindrot:jbcrypt:0.4/g' service/build.gradle
           sed -i '/repo.spring.io/d' build.gradle
           find service/src -name "*.java" -exec sed -i 's/org.connectbot.jbcrypt.BCrypt/org.mindrot.jbcrypt.BCrypt/g' {} +
-          git checkout HEAD -- app/src/main/res/layout/activity_main.xml app/src/main/res/layout/activity_main_drawer.xml
           python3 -c '
           import glob, re
           for l in glob.glob("app/src/main/res/layout/*main*.xml"):
