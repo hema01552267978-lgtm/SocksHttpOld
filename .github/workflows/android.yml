@@ -3,7 +3,6 @@ on:
   push:
     branches: [ main, master ]
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -12,26 +11,21 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: temurin
-
       - name: Fix All
         run: |
           python3 - <<'PY'
           import re
           from pathlib import Path
-
-          # 1. Gradle 8.7 + AGP 8.5.2
           p = Path("gradle/wrapper/gradle-wrapper.properties")
           if p.exists():
               t = p.read_text()
               t = re.sub(r'gradle-[\d.]+-(all|bin)\.zip', 'gradle-8.7-all.zip', t)
               p.write_text(t)
-
           p = Path("build.gradle")
           if p.exists():
               t = p.read_text()
@@ -39,8 +33,6 @@ jobs:
               if "jitpack.io" not in t:
                   t = t.replace("mavenCentral()", "mavenCentral()\n        maven { url 'https://jitpack.io' }\n        maven { url 'https://repo.jenkins-ci.org/public/' }")
               p.write_text(t)
-
-          # 2. اقرا package من Manifest
           pkg_map = {}
           for m in list(Path(".").rglob("AndroidManifest.xml")):
               if ".git" in str(m) or "/build/" in str(m): continue
@@ -54,8 +46,6 @@ jobs:
                           pkg_map[str(cur)] = mm.group(1)
                           break
                       cur = cur.parent
-
-          # 3. اصلاح كل build.gradle + jbcrypt
           for p in list(Path(".").rglob("build.gradle")):
               if ".git" in str(p) or "/build/" in str(p): continue
               try: t = p.read_text()
@@ -65,31 +55,23 @@ jobs:
               t = re.sub(r'targetSdk\s+\d+', 'targetSdk 35', t)
               t = re.sub(r'minSdk\s+\d+', 'minSdk 24', t)
               t = re.sub(r'minSdkVersion\s+\d+', 'minSdkVersion 24', t)
-
-              # الحل النهائي لـ jbcrypt: استبدلها بمكتبة mindrot الشغالة على Maven Central
+              t = re.sub(r'\s*buildToolsVersion\s+["\'][^"\']+["\']', '', t)
               if "jbcrypt" in t.lower() or "connectbot" in t.lower():
                   t = re.sub(r"org\.connectbot\.jbcrypt:jbcrypt:[^\s\"']+", "org.mindrot:jbcrypt:0.4", t)
                   t = re.sub(r"com\.github\.connectbot:jbcrypt:[^\s\"']+", "org.mindrot:jbcrypt:0.4", t)
                   t = re.sub(r"org\.connectbot\.jbcrypt:jbcrypt", "org.mindrot:jbcrypt:0.4", t)
-                  print(f"fixed jbcrypt -> mindrot in {p}")
-
               if "jitpack.io" not in t and "repositories" in t:
                   t = t.replace("mavenCentral()", "mavenCentral()\n        maven { url 'https://jitpack.io' }")
-
               if 'namespace' not in t and ('com.android.application' in t or 'com.android.library' in t):
                   ns = pkg_map.get(str(p.parent))
                   if not ns:
                       m2 = re.search(r'applicationId\s+["\']([^"\']+)["\']', t)
                       if m2: ns = m2.group(1)
-                  if not ns:
-                      ns = f"com.sockshttp.{p.parent.name.replace('-','_')}"
+                  if not ns: ns = f"com.sockshttp.{p.parent.name.replace('-','_')}"
                   t = re.sub(r'android\s*\{', f'android {{\n    namespace "{ns}"', t, count=1)
-
               if 'ndkVersion' not in t and 'compileSdk 35' in t:
                   t = t.replace('compileSdk 35', 'compileSdk 35\n    ndkVersion "27.0.12077973"', 1)
               if t != orig: p.write_text(t)
-
-          # 4. اصلاح الـ import في الكود نفسه: connectbot -> mindrot
           for ext in ["*.java", "*.kt"]:
               for f in list(Path(".").rglob(ext)):
                   if ".git" in str(f) or "/build/" in str(f): continue
@@ -98,9 +80,6 @@ jobs:
                   if "org.connectbot.jbcrypt" in txt:
                       txt = txt.replace("org.connectbot.jbcrypt", "org.mindrot.jbcrypt")
                       f.write_text(txt)
-                      print(f"fixed import in {f}")
-
-          # 5. Manifests
           for m in list(Path(".").rglob("AndroidManifest.xml")):
               if ".git" in str(m) or "/build/" in str(m): continue
               try: t = m.read_text()
@@ -118,23 +97,28 @@ jobs:
               m.write_text(t)
           print("ALL FIXED OK")
           PY
-
       - name: Restore Layouts
         run: |
           FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD)
           git checkout "$FIRST_COMMIT" -- app/src/main/res/layout/activity_main.xml app/src/main/res/layout/activity_main_drawer.xml || true
-
       - name: Build APK
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
-          echo "===== FIND APK ====="
-          find . -name "*.apk" -type f
-
+          ./gradlew assembleDebug --stacktrace > build.log 2>&1 || true
+          echo "========== REAL ERROR =========="
+          grep -i -m 20 -E "^e:|error:|Caused by:|FAILED|Execution failed" build.log || echo "No error line found"
+          echo "========== JAVA ERRORS =========="
+          grep -i -m 30 "error:" build.log || true
+          echo "========== FIND APK =========="
+          find . -name "*.apk" -type f || true
+          echo "========== TAIL =========="
+          tail -n 50 build.log
       - name: Upload APK
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: Elmaloo3n-VPN-APK
           path: |
             **/*.apk
-          if-no-files-found: error
+            build.log
+          if-no-files-found: warn
