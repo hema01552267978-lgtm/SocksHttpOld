@@ -22,11 +22,22 @@ jobs:
 
           git checkout $FIRST_COMMIT -- app/src/main/res/layout/activity_main.xml app/src/main/res/layout/activity_main_drawer.xml
 
-          sed -i 's/org.connectbot.jbcrypt:jbcrypt:1.0.0/org.mindrot:jbcrypt:0.4/g' service/build.gradle
+          python3 <<'PY'
+          from pathlib import Path
 
-          sed -i '/repo.spring.io/d' build.gradle
+          path = Path("build.gradle")
+          text = path.read_text()
 
-          find service/src -name "*.java" -exec sed -i 's/org.connectbot.jbcrypt.BCrypt/org.mindrot.jbcrypt.BCrypt/g' {} +
+          repo = "maven { url 'https://repo.jenkins-ci.org/public/' }"
+
+          if repo not in text:
+              text = text.replace(
+                  "mavenCentral()",
+                  "mavenCentral()\n        " + repo
+              )
+
+          path.write_text(text)
+          PY
 
           python3 <<'PY'
           import re
@@ -108,4 +119,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: Elmaloo3n-VPN-APK
-          path: app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/debug/*.apk          path: app/build/outputs/apk/debug/*.apk
