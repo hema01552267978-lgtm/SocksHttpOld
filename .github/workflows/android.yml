@@ -19,7 +19,7 @@ jobs:
           java-version: '17'
           distribution: temurin
 
-      - name: Fix All - Gradle + Namespace + Manifest + Dependencies
+      - name: Fix All
         run: |
           python3 - <<'PY'
           import re
@@ -36,12 +36,11 @@ jobs:
           if p.exists():
               t = p.read_text()
               t = re.sub(r"com\.android\.tools\.build:gradle:[0-9.]+", "com.android.tools.build:gradle:8.5.2", t)
-              # ضيف JitPack + Jenkins في الملف الرئيسي
               if "jitpack.io" not in t:
                   t = t.replace("mavenCentral()", "mavenCentral()\n        maven { url 'https://jitpack.io' }\n        maven { url 'https://repo.jenkins-ci.org/public/' }")
               p.write_text(t)
 
-          # 2. اقرا package من كل Manifest قبل ما تمسحه
+          # 2. اقرا package من Manifest
           pkg_map = {}
           for m in list(Path(".").rglob("AndroidManifest.xml")):
               if ".git" in str(m) or "/build/" in str(m): continue
@@ -55,9 +54,8 @@ jobs:
                           pkg_map[str(cur)] = mm.group(1)
                           break
                       cur = cur.parent
-                  print(f"found {mm.group(1)} -> {cur}")
 
-          # 3. حط namespace + SDK 35 + اصلاح jbcrypt في كل build.gradle
+          # 3. اصلاح كل build.gradle + jbcrypt
           for p in list(Path(".").rglob("build.gradle")):
               if ".git" in str(p) or "/build/" in str(p): continue
               try: t = p.read_text()
@@ -68,13 +66,13 @@ jobs:
               t = re.sub(r'minSdk\s+\d+', 'minSdk 24', t)
               t = re.sub(r'minSdkVersion\s+\d+', 'minSdkVersion 24', t)
 
-              # اصلاح jbcrypt الميتة
-              if "org.connectbot.jbcrypt" in t:
-                  t = t.replace("org.connectbot.jbcrypt:jbcrypt:1.0.0", "com.github.connectbot:jbcrypt:1.0.0")
-                  t = t.replace("org.connectbot.jbcrypt:jbcrypt", "com.github.connectbot:jbcrypt")
-                  print(f"fixed jbcrypt in {p}")
+              # الحل النهائي لـ jbcrypt: استبدلها بمكتبة mindrot الشغالة على Maven Central
+              if "jbcrypt" in t.lower() or "connectbot" in t.lower():
+                  t = re.sub(r"org\.connectbot\.jbcrypt:jbcrypt:[^\s\"']+", "org.mindrot:jbcrypt:0.4", t)
+                  t = re.sub(r"com\.github\.connectbot:jbcrypt:[^\s\"']+", "org.mindrot:jbcrypt:0.4", t)
+                  t = re.sub(r"org\.connectbot\.jbcrypt:jbcrypt", "org.mindrot:jbcrypt:0.4", t)
+                  print(f"fixed jbcrypt -> mindrot in {p}")
 
-              # ضيف JitPack لو مش موجود
               if "jitpack.io" not in t and "repositories" in t:
                   t = t.replace("mavenCentral()", "mavenCentral()\n        maven { url 'https://jitpack.io' }")
 
@@ -86,13 +84,23 @@ jobs:
                   if not ns:
                       ns = f"com.sockshttp.{p.parent.name.replace('-','_')}"
                   t = re.sub(r'android\s*\{', f'android {{\n    namespace "{ns}"', t, count=1)
-                  print(f"added namespace {ns} to {p}")
 
               if 'ndkVersion' not in t and 'compileSdk 35' in t:
                   t = t.replace('compileSdk 35', 'compileSdk 35\n    ndkVersion "27.0.12077973"', 1)
               if t != orig: p.write_text(t)
 
-          # 4. امسح package من Manifests وصلح الخناقات
+          # 4. اصلاح الـ import في الكود نفسه: connectbot -> mindrot
+          for ext in ["*.java", "*.kt"]:
+              for f in list(Path(".").rglob(ext)):
+                  if ".git" in str(f) or "/build/" in str(f): continue
+                  try: txt = f.read_text(errors="ignore")
+                  except: continue
+                  if "org.connectbot.jbcrypt" in txt:
+                      txt = txt.replace("org.connectbot.jbcrypt", "org.mindrot.jbcrypt")
+                      f.write_text(txt)
+                      print(f"fixed import in {f}")
+
+          # 5. Manifests
           for m in list(Path(".").rglob("AndroidManifest.xml")):
               if ".git" in str(m) or "/build/" in str(m): continue
               try: t = m.read_text()
