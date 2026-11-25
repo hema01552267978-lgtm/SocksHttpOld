@@ -16,52 +16,51 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: temurin
 
       - name: Prepare project
         run: |
           FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD)
-
           git checkout "$FIRST_COMMIT" -- app/src/main/res/layout/activity_main.xml app/src/main/res/layout/activity_main_drawer.xml
 
           python3 - <<'PY'
           from pathlib import Path
-
           path = Path("build.gradle")
           text = path.read_text()
-
           repo = "maven { url 'https://repo.jenkins-ci.org/public/' }"
-
           if repo not in text:
-              text = text.replace(
-                  "mavenCentral()",
-                  "mavenCentral()\n        " + repo
-              )
-
+              text = text.replace("mavenCentral()", "mavenCentral()\n        " + repo)
           path.write_text(text)
           PY
 
           python3 - <<'PY'
           import re
           from pathlib import Path
+          # إصلاح دعم اندرويد 16 و 16KB
+          p = Path("app/build.gradle")
+          t = p.read_text()
+          t = re.sub(r'compileSdk\s+\d+', 'compileSdk 35', t)
+          t = re.sub(r'targetSdk\s+\d+', 'targetSdk 35', t)
+          t = re.sub(r'minSdk\s+\d+', 'minSdk 24', t)
+          if 'ndkVersion' not in t:
+              t = t.replace('compileSdk 35', 'compileSdk 35\n    ndkVersion "27.0.12077973"')
+          if 'useLegacyPackaging' not in t:
+              t = t.replace('packagingOptions {', 'packagingOptions {\n        jniLibs {\n            useLegacyPackaging = false\n        }')
+          p.write_text(t)
+          print("Fixed SDK for Android 16")
+          PY
 
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
           layout_dir = Path("app/src/main/res/layout")
-
           for path in layout_dir.glob("*main*.xml"):
               xml = path.read_text()
-
-              xml = re.sub(
-                  r'android:background="@color/[^"]+"',
-                  'android:background="@drawable/my_photo"',
-                  xml
-              )
-
+              xml = re.sub(r'android:background="@color/[^"]+"', 'android:background="@drawable/my_photo"', xml)
               path.write_text(xml)
-
           path = layout_dir / "activity_main.xml"
           xml = path.read_text()
-
           header = """<LinearLayout
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
@@ -69,7 +68,6 @@ jobs:
               android:background="#CC000000"
               android:padding="8dp"
               android:gravity="center">
-
               <TextView
                   android:id="@+id/tv_marquee"
                   android:layout_width="match_parent"
@@ -83,7 +81,6 @@ jobs:
                   android:marqueeRepeatLimit="marquee_forever"
                   android:focusable="true"
                   android:focusableInTouchMode="true" />
-
               <Button
                   android:id="@+id/btn_wa_dev"
                   android:layout_width="match_parent"
@@ -92,32 +89,18 @@ jobs:
                   android:text="Contact Developer WhatsApp"
                   android:backgroundTint="#25D366"
                   android:textColor="#FFFFFF" />
-
           </LinearLayout>
           """
-
           root = re.search(r'<ScrollView\b[^>]*>', xml, re.S)
-
           if not root:
               raise Exception("ScrollView root not found")
-
           content = xml[root.end():]
-
-          child = re.search(
-              r'<LinearLayout\b[^>]*>',
-              content,
-              re.S
-          )
-
+          child = re.search(r'<LinearLayout\b[^>]*>', content, re.S)
           if not child:
               raise Exception("Main LinearLayout not found")
-
           position = root.end() + child.end()
-
           xml = xml[:position] + "\n" + header + xml[position:]
-
           path.write_text(xml)
-
           print("Layout updated successfully")
           PY
 
