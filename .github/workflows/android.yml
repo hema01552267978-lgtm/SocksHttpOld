@@ -1,6 +1,9 @@
 name: Android CI
 on:
   push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -10,19 +13,19 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Java
+      - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: temurin
 
-      - name: Fix All - Correct Order
+      - name: Fix All - Gradle + Namespace + Manifest
         run: |
           python3 - <<'PY'
           import re
           from pathlib import Path
 
-          # 1. Gradle + AGP
+          # 1. Gradle 8.7 + AGP 8.5.2
           p = Path("gradle/wrapper/gradle-wrapper.properties")
           if p.exists():
               t = p.read_text()
@@ -35,28 +38,23 @@ jobs:
               t = re.sub(r"com\.android\.tools\.build:gradle:[0-9.]+", "com.android.tools.build:gradle:8.5.2", t)
               p.write_text(t)
 
-          # 2. اهم خطوة: اقرا package من كل Manifest قبل ما تمسحه
-          pkg_map = {}  # folder -> package
+          # 2. اقرا package من كل Manifest قبل ما تمسحه
+          pkg_map = {}
           for m in list(Path(".").rglob("AndroidManifest.xml")):
               if ".git" in str(m) or "/build/" in str(m): continue
               try: txt = m.read_text()
               except: continue
               mm = re.search(r'package="([^"]+)"', txt)
               if mm:
-                  # المجلد اللي فيه الـ Manifest ده، اطلع لفوق لحد build.gradle
-                  folder = m.parent.parent.parent  # src/main -> module root تقريبا
-                  # دور على اقرب build.gradle لفوق
                   cur = m.parent
-                  for _ in range(5):
+                  for _ in range(6):
                       if (cur / "build.gradle").exists():
                           pkg_map[str(cur)] = mm.group(1)
                           break
                       cur = cur.parent
-                  print(f"found package {mm.group(1)} for {cur}")
+                  print(f"found {mm.group(1)} -> {cur}")
 
-          print("pkg_map:", pkg_map)
-
-          # 3. حط namespace في كل build.gradle
+          # 3. حط namespace + SDK 35 في كل build.gradle
           for p in list(Path(".").rglob("build.gradle")):
               if ".git" in str(p) or "/build/" in str(p): continue
               try: t = p.read_text()
@@ -68,16 +66,12 @@ jobs:
               t = re.sub(r'minSdkVersion\s+\d+', 'minSdkVersion 24', t)
 
               if 'namespace' not in t and ('com.android.application' in t or 'com.android.library' in t):
-                  # اولوية 1: package من الـ Manifest بتاع نفس الموديول
                   ns = pkg_map.get(str(p.parent))
-                  # اولوية 2: applicationId
                   if not ns:
                       m2 = re.search(r'applicationId\s+["\']([^"\']+)["\']', t)
                       if m2: ns = m2.group(1)
-                  # اولوية 3: اسم المجلد كـ fallback عشان مايقعش تاني
                   if not ns:
-                      ns = f"com.sockshttp.{p.parent.name.replace('-','_').replace(' ','_')}"
-                  # حطه بعد android {
+                      ns = f"com.sockshttp.{p.parent.name.replace('-','_')}"
                   t = re.sub(r'android\s*\{', f'android {{\n    namespace "{ns}"', t, count=1)
                   print(f"added namespace {ns} to {p}")
 
@@ -85,7 +79,7 @@ jobs:
                   t = t.replace('compileSdk 35', 'compileSdk 35\n    ndkVersion "27.0.12077973"', 1)
               if t != orig: p.write_text(t)
 
-          # 4. دلوقتي بس امسح package من الـ Manifests
+          # 4. دلوقتي امسح package من Manifests وصلح الخناقات
           for m in list(Path(".").rglob("AndroidManifest.xml")):
               if ".git" in str(m) or "/build/" in str(m): continue
               try: t = m.read_text()
@@ -94,7 +88,6 @@ jobs:
                   t = t.replace('<manifest', '<manifest xmlns:tools="http://schemas.android.com/tools"', 1)
               t = re.sub(r'\s+package="[^"]+"', '', t)
               if 'app/src/main' not in str(m):
-                  # مكتبة: امسح application بتاعها عشان مايتخانقش
                   t = re.sub(r'<application[^>]*>.*?</application>', '', t, flags=re.S)
                   t = re.sub(r'<application[^>]*/>', '', t)
               else:
@@ -113,15 +106,14 @@ jobs:
       - name: Build APK
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --info || true
-          echo "===== MERGER REPORT ====="
-          find . -name "manifest-merger-*-report.txt" -exec echo "--- {} ---" \; -exec cat {} \; || true
+          ./gradlew assembleDebug --stacktrace
           echo "===== FIND APK ====="
-          find . -name "*.apk" || true
+          find . -name "*.apk" -type f
 
       - name: Upload APK
-        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: Elmaloo3n-VPN-APK
-          path: app/build/outputs/apk/debug/*.apk
+          path: |
+            **/*.apk
+          if-no-files-found: error
