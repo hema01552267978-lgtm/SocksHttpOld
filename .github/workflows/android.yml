@@ -9,7 +9,10 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
-      - run: chmod +x gradlew && ./gradlew assembleDebug
+      - run: |
+          sed -i 's/mavenCentral()/mavenCentral()\n        maven { url "https:\/\/jitpack.io" }/g' build.gradle
+          sed -i 's/org.connectbot.jbcrypt:jbcrypt:1.0.0/com.github.connectbot:jbcrypt:1.0.0/g' service/build.gradle
+          chmod +x gradlew && ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
         with:
           name: Elmaloo3n-VPN-APK
