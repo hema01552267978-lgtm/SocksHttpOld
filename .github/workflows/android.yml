@@ -16,34 +16,11 @@ jobs:
         with:
           java-version: '17'
           distribution: temurin
-      - name: Fix All - Bulletproof
+      - name: Fix All
         run: |
           python3 - <<'PY'
           import re
           from pathlib import Path
-
-          def fix_gradle(p):
-              try: t = p.read_text()
-              except: return
-              orig = t
-              t = re.sub(r'compileSdk\s+\d+', 'compileSdk 35', t)
-              t = re.sub(r'targetSdk\s+\d+', 'targetSdk 35', t)
-              t = re.sub(r'minSdk\s+\d+', 'minSdk 24', t)
-              t = re.sub(r'minSdkVersion\s+\d+', 'minSdkVersion 24', t)
-              t = re.sub(r'\s*buildToolsVersion\s+["\'][^"\']+["\']', '', t)
-              # jbcrypt الميتة
-              t = re.sub(r"org\.connectbot\.jbcrypt:jbcrypt:[^\s\"']+", "org.mindrot:jbcrypt:0.4", t)
-              t = re.sub(r"com\.github\.connectbot:jbcrypt:[^\s\"']+", "org.mindrot:jbcrypt:0.4", t)
-              t = re.sub(r"org\.connectbot\.jbcrypt:jbcrypt", "org.mindrot:jbcrypt:0.4", t)
-              # JitPack
-              if "jitpack.io" not in t and "repositories" in t:
-                  t = t.replace("mavenCentral()", "mavenCentral()\n        maven { url 'https://jitpack.io' }")
-              # اقفل Lint + حط Java 17 + packaging
-              if 'lintOptions' not in t and 'lint {' not in t and 'compileSdk' in t:
-                  t = t.replace('compileSdk 35', 'compileSdk 35\n    ndkVersion "27.0.12077973"\n    lint { abortOnError false; checkReleaseBuilds false; disable "MissingTranslation", "ExtraTranslation", "InvalidPackage" }\n    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }\n    packaging { resources { excludes += ["META-INF/*", "META-INF/DEPENDENCIES", "META-INF/LICENSE*", "META-INF/NOTICE*"] } }', 1)
-              if t != orig: p.write_text(t)
-
-          # 1. Wrapper + AGP
           p = Path("gradle/wrapper/gradle-wrapper.properties")
           if p.exists():
               t = p.read_text()
@@ -56,8 +33,6 @@ jobs:
               if "jitpack.io" not in t:
                   t = t.replace("mavenCentral()", "mavenCentral()\n        maven { url 'https://jitpack.io' }\n        maven { url 'https://repo.jenkins-ci.org/public/' }")
               p.write_text(t)
-
-          # 2. Package map
           pkg_map = {}
           for m in list(Path(".").rglob("AndroidManifest.xml")):
               if ".git" in str(m) or "/build/" in str(m): continue
@@ -70,13 +45,24 @@ jobs:
                       if (cur / "build.gradle").exists():
                           pkg_map[str(cur)] = mm.group(1); break
                       cur = cur.parent
-
-          # 3. كل build.gradle
           for p in list(Path(".").rglob("build.gradle")):
               if ".git" in str(p) or "/build/" in str(p): continue
-              fix_gradle(p)
               try: t = p.read_text()
               except: continue
+              orig = t
+              t = re.sub(r'compileSdk\s+\d+', 'compileSdk 35', t)
+              t = re.sub(r'targetSdk\s+\d+', 'targetSdk 35', t)
+              t = re.sub(r'minSdk\s+\d+', 'minSdk 24', t)
+              t = re.sub(r'minSdkVersion\s+\d+', 'minSdkVersion 24', t)
+              t = re.sub(r'\s*buildToolsVersion\s+["\'][^"\']+["\']', '', t)
+              t = re.sub(r"org\.connectbot\.jbcrypt:jbcrypt:[^\s\"']+", "org.mindrot:jbcrypt:0.4", t)
+              t = re.sub(r"com\.github\.connectbot:jbcrypt:[^\s\"']+", "org.mindrot:jbcrypt:0.4", t)
+              t = re.sub(r"org\.connectbot\.jbcrypt:jbcrypt", "org.mindrot:jbcrypt:0.4", t)
+              if "jitpack.io" not in t and "repositories" in t:
+                  t = t.replace("mavenCentral()", "mavenCentral()\n        maven { url 'https://jitpack.io' }")
+              # === الحل الجديد: شغل BuildConfig لكل الموديولات ===
+              if 'buildFeatures' not in t and 'compileSdk' in t:
+                  t = t.replace('compileSdk 35', 'compileSdk 35\n    ndkVersion "27.0.12077973"\n    buildFeatures { buildConfig true }\n    lint { abortOnError false; checkReleaseBuilds false }\n    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }\n    packaging { resources { excludes += ["META-INF/*"] } }', 1)
               if 'namespace' not in t and ('com.android.application' in t or 'com.android.library' in t):
                   ns = pkg_map.get(str(p.parent))
                   if not ns:
@@ -84,9 +70,7 @@ jobs:
                       if m2: ns = m2.group(1)
                   if not ns: ns = f"com.sockshttp.{p.parent.name.replace('-','_')}"
                   t = re.sub(r'android\s*\{', f'android {{\n    namespace "{ns}"', t, count=1)
-                  p.write_text(t)
-
-          # 4. اصلاح imports
+              if t != orig: p.write_text(t)
           for ext in ["*.java", "*.kt"]:
               for f in list(Path(".").rglob(ext)):
                   if ".git" in str(f) or "/build/" in str(f): continue
@@ -94,8 +78,6 @@ jobs:
                   except: continue
                   if "org.connectbot.jbcrypt" in txt:
                       f.write_text(txt.replace("org.connectbot.jbcrypt", "org.mindrot.jbcrypt"))
-
-          # 5. Manifest - الحل النهائي
           for m in list(Path(".").rglob("AndroidManifest.xml")):
               if ".git" in str(m) or "/build/" in str(m): continue
               try: t = m.read_text()
@@ -109,9 +91,7 @@ jobs:
                   t = re.sub(r'<uses-sdk[^>]*/>', '', t)
               else:
                   t = re.sub(r'\s+tools:replace="[^"]+"', '', t)
-                  # شيل الاذونات المكررة كلها، مش INTERNET بس
-                  seen = set()
-                  out = []
+                  seen = set(); out = []
                   for line in t.splitlines():
                       mm2 = re.search(r'uses-permission[^>]*android:name="([^"]+)"', line)
                       if mm2:
@@ -119,7 +99,6 @@ jobs:
                           seen.add(mm2.group(1))
                       out.append(line)
                   t = "\n".join(out)
-                  # حط القيم الحقيقية
                   if 'android:supportsRtl' not in t:
                       t = t.replace('<application', '<application android:supportsRtl="true"', 1)
                   if 'android:usesCleartextTraffic' not in t:
@@ -130,7 +109,7 @@ jobs:
                       t = t.replace('<application', '<application tools:replace="android:label,android:icon,android:theme"', 1)
                   t = re.sub(r'<uses-sdk[^>]*/>', '', t)
               m.write_text(t)
-          print("BULLETPROOF FIX DONE")
+          print("FIX DONE - BuildConfig ON")
           PY
       - name: Restore Layouts
         run: |
@@ -139,20 +118,13 @@ jobs:
       - name: Build APK
         run: |
           chmod +x gradlew
-          ./gradlew clean || true
-          ./gradlew assembleDebug --stacktrace --continue > build.log 2>&1 || true
-          echo "========== REAL ERROR =========="
-          grep -i -m 30 -E "error:|Caused by:|FAILED|Execution failed" build.log || echo "NO ERROR FOUND - CHECK APK"
-          echo "========== APK =========="
-          find . -name "*.apk" -type f || true
-          echo "========== TAIL =========="
-          tail -n 40 build.log
+          ./gradlew clean
+          ./gradlew assembleDebug --stacktrace
+          ls -lh app/build/outputs/apk/debug/
       - name: Upload APK
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: Elmaloo3n-VPN-APK
           path: |
             **/*.apk
-            build.log
-          if-no-files-found: warn
+          if-no-files-found: error
