@@ -132,8 +132,6 @@ jobs:
                       t = t.replace('<application', '<application android:usesCleartextTraffic="true"', 1)
                   if 'android:allowBackup' not in t:
                       t = t.replace('<application', '<application android:allowBackup="true"', 1)
-                  if 'tools:replace' not in t:
-                      t = t.replace('<application', '<application tools:replace="android:label,android:icon,android:theme"', 1)
 
                   t = re.sub(r'<uses-sdk[^>]*/>', '', t)
 
