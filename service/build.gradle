@@ -1,35 +1,37 @@
-apply plugin: 'com.android.library'
+plugins {
+    id 'com.android.library'
+}
 
 android {
-    compileSdkVersion 30
-    buildToolsVersion "30.0.2"
+    namespace 'com.slipkprojects.ultrasshservice'
+    compileSdk 35
 
     defaultConfig {
-        minSdkVersion 21
-        targetSdkVersion 28
-        versionCode 1
-        versionName "1.0"
+        minSdk 21
+        targetSdk 28
     }
+
+    buildFeatures {
+        buildConfig true
+        aidl true
+    }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 }
 
 dependencies {
-    
-	implementation 'com.android.support:appcompat-v7:25.+'
-	
+    implementation 'com.android.support:appcompat-v7:25.+'
     implementation 'net.i2p.crypto:eddsa:0.3.0'
-	implementation 'org.connectbot:jbcrypt:1.0.2'
-	
-	// root detect
-	implementation 'com.github.kimchangyoun:rootbeerFresh:+'
-	
+    implementation 'org.connectbot:jbcrypt:1.0.2'
+    implementation 'com.github.kimchangyoun:rootbeerFresh:+'
 }
