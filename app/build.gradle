@@ -3,15 +3,15 @@ plugins {
 }
 
 android {
-    compileSdkVersion 30
-    buildToolsVersion "30.0.2"
+    namespace 'com.slipkprojects.sockshttp'
+    compileSdk 35
 
     defaultConfig {
-        applicationId "com.slipkprojects.sockshttp"
-        minSdkVersion 21
-        targetSdkVersion 28
+        applicationId 'com.slipkprojects.sockshttp'
+        minSdk 21
+        targetSdk 28
         versionCode 25
-        versionName "1.1.1"
+        versionName '1.1.1'
     }
 
     buildTypes {
@@ -20,23 +20,18 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 }
 
 dependencies {
-
-    
-	// support libs
     implementation 'com.android.support:appcompat-v7:25.+'
-	implementation 'com.android.support:preference-v7:25.+'
-	implementation 'com.android.support:design:25.+'
-	
-	// outros
-	implementation 'com.android.support.constraint:constraint-layout:1.0.2'
-	implementation 'com.google.android.gms:play-services-ads-lite:11.8.0'
-	
-	implementation project(':service')
+    implementation 'com.android.support:preference-v7:25.+'
+    implementation 'com.android.support:design:25.+'
+    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+    implementation 'com.google.android.gms:play-services-ads-lite:11.8.0'
+    implementation project(':service')
 }
