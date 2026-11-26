@@ -3,6 +3,7 @@ on:
   push:
     branches: [ main, master ]
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -11,21 +12,25 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: temurin
+
       - name: Fix All
         run: |
           python3 - <<'PY'
           import re
           from pathlib import Path
+
           p = Path("gradle/wrapper/gradle-wrapper.properties")
           if p.exists():
               t = p.read_text()
               t = re.sub(r'gradle-[\d.]+-(all|bin)\.zip', 'gradle-8.7-all.zip', t)
               p.write_text(t)
+
           p = Path("build.gradle")
           if p.exists():
               t = p.read_text()
@@ -33,74 +38,108 @@ jobs:
               if "jitpack.io" not in t:
                   t = t.replace("mavenCentral()", "mavenCentral()\n        maven { url 'https://jitpack.io' }\n        maven { url 'https://repo.jenkins-ci.org/public/' }")
               p.write_text(t)
+
           pkg_map = {}
           for m in list(Path(".").rglob("AndroidManifest.xml")):
-              if ".git" in str(m) or "/build/" in str(m): continue
-              try: txt = m.read_text()
-              except: continue
+              if ".git" in str(m) or "/build/" in str(m):
+                  continue
+              try:
+                  txt = m.read_text()
+              except:
+                  continue
               mm = re.search(r'package="([^"]+)"', txt)
               if mm:
                   cur = m.parent
                   for _ in range(6):
                       if (cur / "build.gradle").exists():
-                          pkg_map[str(cur)] = mm.group(1); break
+                          pkg_map[str(cur)] = mm.group(1)
+                          break
                       cur = cur.parent
+
           for p in list(Path(".").rglob("build.gradle")):
-              if ".git" in str(p) or "/build/" in str(p): continue
-              try: t = p.read_text()
-              except: continue
+              if ".git" in str(p) or "/build/" in str(p):
+                  continue
+              try:
+                  t = p.read_text()
+              except:
+                  continue
+
               orig = t
               t = re.sub(r'compileSdk\s+\d+', 'compileSdk 35', t)
               t = re.sub(r'targetSdk\s+\d+', 'targetSdk 35', t)
               t = re.sub(r'minSdk\s+\d+', 'minSdk 24', t)
               t = re.sub(r'minSdkVersion\s+\d+', 'minSdkVersion 24', t)
               t = re.sub(r'\s*buildToolsVersion\s+["\'][^"\']+["\']', '', t)
-              # شيل mindrot خالص - هنستخدم سورس connectbot بدل المكتبة
+
               t = re.sub(r"\s*.*mindrot.*jbcrypt.*\n", "\n", t)
               t = re.sub(r"\s*.*connectbot.*jbcrypt.*\n", "\n", t)
               t = re.sub(r"\s*.*com\.github\.connectbot.*\n", "\n", t)
+
               if "jitpack.io" not in t and "repositories" in t:
                   t = t.replace("mavenCentral()", "mavenCentral()\n        maven { url 'https://jitpack.io' }")
+
               if 'buildFeatures' not in t and 'compileSdk' in t:
-                  t = t.replace('compileSdk 35', 'compileSdk 35\n    ndkVersion "27.0.12077973"\n    buildFeatures { buildConfig true; aidl true }\n    lint { abortOnError false; checkReleaseBuilds false }\n    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }\n    packaging { resources { excludes += ["META-INF/*"] } }', 1)
+                  t = t.replace(
+                      'compileSdk 35',
+                      'compileSdk 35\n    ndkVersion "27.0.12077973"\n    buildFeatures { buildConfig true; aidl true }\n    lint { abortOnError false; checkReleaseBuilds false }\n    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }\n    packaging { resources { excludes += ["META-INF/*"] } }',
+                      1
+                  )
+
               if 'namespace' not in t and ('com.android.application' in t or 'com.android.library' in t):
                   ns = pkg_map.get(str(p.parent))
                   if not ns:
                       m2 = re.search(r'applicationId\s+["\']([^"\']+)["\']', t)
-                      if m2: ns = m2.group(1)
-                  if not ns: ns = f"com.sockshttp.{p.parent.name.replace('-','_')}"
+                      if m2:
+                          ns = m2.group(1)
+                  if not ns:
+                      ns = f"com.sockshttp.{p.parent.name.replace('-','_')}"
                   t = re.sub(r'android\s*\{', f'android {{\n    namespace "{ns}"', t, count=1)
-              if t != orig: p.write_text(t)
-          # رجع imports لـ connectbot تاني
+
+              if t != orig:
+                  p.write_text(t)
+
           for ext in ["*.java", "*.kt"]:
               for f in list(Path(".").rglob(ext)):
-                  if ".git" in str(f) or "/build/" in str(f): continue
-                  try: txt = f.read_text(errors="ignore")
-                  except: continue
+                  if ".git" in str(f) or "/build/" in str(f):
+                      continue
+                  try:
+                      txt = f.read_text(errors="ignore")
+                  except:
+                      continue
                   if "org.mindrot.jbcrypt" in txt:
                       f.write_text(txt.replace("org.mindrot.jbcrypt", "org.connectbot.jbcrypt"))
+
           # Manifest
           for m in list(Path(".").rglob("AndroidManifest.xml")):
-              if ".git" in str(m) or "/build/" in str(m): continue
-              try: t = m.read_text()
-              except: continue
+              if ".git" in str(m) or "/build/" in str(m):
+                  continue
+              try:
+                  t = m.read_text()
+              except:
+                  continue
+
               if 'xmlns:tools' not in t:
                   t = t.replace('<manifest', '<manifest xmlns:tools="http://schemas.android.com/tools"', 1)
+
               t = re.sub(r'\s+package="[^"]+"', '', t)
+
               if 'app/src/main' not in str(m):
-                  t = re.sub(r'<application[^>]*>.*?</application>', '', t, flags=re.S)
-                  t = re.sub(r'<application[^>]*/>', '', t)
-                  t = re.sub(r'<uses-sdk[^>]*/>', '', t)
+                  # Keep the original application and uses-sdk declarations.
+                  pass
               else:
                   t = re.sub(r'\s+tools:replace="[^"]+"', '', t)
-                  seen = set(); out = []
+                  seen = set()
+                  out = []
                   for line in t.splitlines():
                       mm2 = re.search(r'uses-permission[^>]*android:name="([^"]+)"', line)
                       if mm2:
-                          if mm2.group(1) in seen: continue
+                          if mm2.group(1) in seen:
+                              continue
                           seen.add(mm2.group(1))
                       out.append(line)
+
                   t = "\n".join(out)
+
                   if 'android:supportsRtl' not in t:
                       t = t.replace('<application', '<application android:supportsRtl="true"', 1)
                   if 'android:usesCleartextTraffic' not in t:
@@ -109,14 +148,18 @@ jobs:
                       t = t.replace('<application', '<application android:allowBackup="true"', 1)
                   if 'tools:replace' not in t:
                       t = t.replace('<application', '<application tools:replace="android:label,android:icon,android:theme"', 1)
+
                   t = re.sub(r'<uses-sdk[^>]*/>', '', t)
+
               m.write_text(t)
+
           print("FIX DONE")
           PY
+
       - name: Create Missing Files - BuildConfig + BCrypt + AIDL
         run: |
-          # 1. اعمل BuildConfig يدوي - مضمون 100%
           mkdir -p service/src/main/java/com/slipkprojects/ultrasshservice
+
           cat > service/src/main/java/com/slipkprojects/ultrasshservice/BuildConfig.java <<'JAVA'
           package com.slipkprojects.ultrasshservice;
           public final class BuildConfig {
@@ -127,16 +170,16 @@ jobs:
             public static final String VERSION_NAME = "1.0";
           }
           JAVA
-          echo "BuildConfig created"
-          # 2. نزل سورس BCrypt الاصلي بتاع connectbot - فيه pbkdf
+
           mkdir -p service/src/main/java/org/connectbot/jbcrypt
           curl -sL https://raw.githubusercontent.com/connectbot/jbcrypt/master/src/main/java/org/connectbot/jbcrypt/BCrypt.java -o service/src/main/java/org/connectbot/jbcrypt/BCrypt.java || echo "curl failed"
+
           ls -lh service/src/main/java/org/connectbot/jbcrypt/BCrypt.java
           grep -c "pbkdf" service/src/main/java/org/connectbot/jbcrypt/BCrypt.java || echo "no pbkdf in downloaded file"
-          # 3. شوف ملفات AIDL الموجودة
+
           echo "=== AIDL FILES ==="
           find . -name "*.aidl" -type f || echo "NO AIDL FOUND"
-          # لو مفيش AIDL خالص، اعمل واحد بسيط بالاسم المطلوب
+
           if ! find . -name "IUltraSSHServiceInternal.aidl" | grep -q .; then
             echo "Creating stub AIDL..."
             mkdir -p service/src/main/aidl/com/slipkprojects/ultrasshservice/aidl
@@ -149,17 +192,21 @@ jobs:
           }
           AIDL
           fi
+
           cat service/src/main/aidl/com/slipkprojects/ultrasshservice/aidl/IUltraSSHServiceInternal.aidl || true
+
       - name: Restore Layouts
         run: |
           FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD)
           git checkout "$FIRST_COMMIT" -- app/src/main/res/layout/activity_main.xml app/src/main/res/layout/activity_main_drawer.xml || true
+
       - name: Build APK
         run: |
           chmod +x gradlew
           ./gradlew clean
           ./gradlew assembleDebug --stacktrace
           ls -lh app/build/outputs/apk/debug/
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
