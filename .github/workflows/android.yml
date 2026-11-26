@@ -71,9 +71,6 @@ jobs:
               t = re.sub(r'minSdkVersion\s+\d+', 'minSdkVersion 24', t)
               t = re.sub(r'\s*buildToolsVersion\s+["\'][^"\']+["\']', '', t)
 
-              t = re.sub(r"\s*.*mindrot.*jbcrypt.*\n", "\n", t)
-              t = re.sub(r"\s*.*connectbot.*jbcrypt.*\n", "\n", t)
-              t = re.sub(r"\s*.*com\.github\.connectbot.*\n", "\n", t)
 
               if "jitpack.io" not in t and "repositories" in t:
                   t = t.replace("mavenCentral()", "mavenCentral()\n        maven { url 'https://jitpack.io' }")
@@ -97,17 +94,6 @@ jobs:
 
               if t != orig:
                   p.write_text(t)
-
-          for ext in ["*.java", "*.kt"]:
-              for f in list(Path(".").rglob(ext)):
-                  if ".git" in str(f) or "/build/" in str(f):
-                      continue
-                  try:
-                      txt = f.read_text(errors="ignore")
-                  except:
-                      continue
-                  if "org.mindrot.jbcrypt" in txt:
-                      f.write_text(txt.replace("org.mindrot.jbcrypt", "org.connectbot.jbcrypt"))
 
           # Manifest
           for m in list(Path(".").rglob("AndroidManifest.xml")):
@@ -170,12 +156,6 @@ jobs:
             public static final String VERSION_NAME = "1.0";
           }
           JAVA
-
-          mkdir -p service/src/main/java/org/connectbot/jbcrypt
-          curl -sL https://raw.githubusercontent.com/connectbot/jbcrypt/master/src/main/java/org/connectbot/jbcrypt/BCrypt.java -o service/src/main/java/org/connectbot/jbcrypt/BCrypt.java || echo "curl failed"
-
-          ls -lh service/src/main/java/org/connectbot/jbcrypt/BCrypt.java
-          grep -c "pbkdf" service/src/main/java/org/connectbot/jbcrypt/BCrypt.java || echo "no pbkdf in downloaded file"
 
           echo "=== AIDL FILES ==="
           find . -name "*.aidl" -type f || echo "NO AIDL FOUND"
