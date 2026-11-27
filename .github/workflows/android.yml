@@ -10,8 +10,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Java 17
         uses: actions/setup-java@v4
@@ -19,159 +17,37 @@ jobs:
           java-version: '17'
           distribution: temurin
 
-      - name: Fix All
+      # Keep the app's declared minSdk/targetSdk unchanged.
+      # Only align the build tools with the existing Android Gradle files.
+      - name: Prepare build tools
         run: |
           python3 - <<'PY'
-          import re
           from pathlib import Path
+          import re
 
-          p = Path("gradle/wrapper/gradle-wrapper.properties")
-          if p.exists():
-              t = p.read_text()
-              t = re.sub(r'gradle-[\d.]+-(all|bin)\.zip', 'gradle-8.7-all.zip', t)
-              p.write_text(t)
+          wrapper = Path("gradle/wrapper/gradle-wrapper.properties")
+          if wrapper.exists():
+              text = wrapper.read_text()
+              text = re.sub(r'gradle-[0-9.]+-(all|bin)\.zip', 'gradle-8.7-all.zip', text)
+              wrapper.write_text(text)
 
-          p = Path("build.gradle")
-          if p.exists():
-              t = p.read_text()
-              t = re.sub(r"com\.android\.tools\.build:gradle:[0-9.]+", "com.android.tools.build:gradle:8.5.2", t)
-              if "jitpack.io" not in t:
-                  t = t.replace("mavenCentral()", "mavenCentral()\n        maven { url 'https://jitpack.io' }\n        maven { url 'https://repo.jenkins-ci.org/public/' }")
-              p.write_text(t)
-
-          pkg_map = {}
-          for m in list(Path(".").rglob("AndroidManifest.xml")):
-              if ".git" in str(m) or "/build/" in str(m):
-                  continue
-              try:
-                  txt = m.read_text()
-              except:
-                  continue
-              mm = re.search(r'package="([^"]+)"', txt)
-              if mm:
-                  cur = m.parent
-                  for _ in range(6):
-                      if (cur / "build.gradle").exists():
-                          pkg_map[str(cur)] = mm.group(1)
-                          break
-                      cur = cur.parent
-
-          for p in list(Path(".").rglob("build.gradle")):
-              if ".git" in str(p) or "/build/" in str(p):
-                  continue
-              try:
-                  t = p.read_text()
-              except:
-                  continue
-
-              orig = t
-              t = re.sub(r'compileSdk\s+\d+', 'compileSdk 35', t)
-              t = re.sub(r'targetSdk\s+\d+', 'targetSdk 35', t)
-              t = re.sub(r'minSdk\s+\d+', 'minSdk 24', t)
-              t = re.sub(r'minSdkVersion\s+\d+', 'minSdkVersion 24', t)
-              t = re.sub(r'\s*buildToolsVersion\s+["\'][^"\']+["\']', '', t)
-
-
-              if "jitpack.io" not in t and "repositories" in t:
-                  t = t.replace("mavenCentral()", "mavenCentral()\n        maven { url 'https://jitpack.io' }")
-
-              if 'buildFeatures' not in t and 'compileSdk' in t:
-                  t = t.replace(
-                      'compileSdk 35',
-                      'compileSdk 35\n    ndkVersion "27.0.12077973"\n    buildFeatures { buildConfig true; aidl true }\n    lint { abortOnError false; checkReleaseBuilds false }\n    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }\n    packaging { resources { excludes += ["META-INF/*"] } }',
-                      1
-                  )
-
-              if 'namespace' not in t and ('com.android.application' in t or 'com.android.library' in t):
-                  ns = pkg_map.get(str(p.parent))
-                  if not ns:
-                      m2 = re.search(r'applicationId\s+["\']([^"\']+)["\']', t)
-                      if m2:
-                          ns = m2.group(1)
-                  if not ns:
-                      ns = f"com.sockshttp.{p.parent.name.replace('-','_')}"
-                  t = re.sub(r'android\s*\{', f'android {{\n    namespace "{ns}"', t, count=1)
-
-              if t != orig:
-                  p.write_text(t)
-
-          # Manifest
-          for m in list(Path(".").rglob("AndroidManifest.xml")):
-              if ".git" in str(m) or "/build/" in str(m):
-                  continue
-              try:
-                  t = m.read_text()
-              except:
-                  continue
-
-              if 'xmlns:tools' not in t:
-                  t = t.replace('<manifest', '<manifest xmlns:tools="http://schemas.android.com/tools"', 1)
-
-              t = re.sub(r'\s+package="[^"]+"', '', t)
-
-              if 'app/src/main' not in str(m):
-                  # Keep the original application and uses-sdk declarations.
-                  pass
-              else:
-                  t = re.sub(r'\s+tools:replace="[^"]+"', '', t)
-                  seen = set()
-                  out = []
-                  for line in t.splitlines():
-                      mm2 = re.search(r'uses-permission[^>]*android:name="([^"]+)"', line)
-                      if mm2:
-                          if mm2.group(1) in seen:
-                              continue
-                          seen.add(mm2.group(1))
-                      out.append(line)
-
-                  t = "\n".join(out)
-
-                  if 'android:supportsRtl' not in t:
-                      t = t.replace('<application', '<application android:supportsRtl="true"', 1)
-                  if 'android:usesCleartextTraffic' not in t:
-                      t = t.replace('<application', '<application android:usesCleartextTraffic="true"', 1)
-                  if 'android:allowBackup' not in t:
-                      t = t.replace('<application', '<application android:allowBackup="true"', 1)
-
-                  t = re.sub(r'<uses-sdk[^>]*/>', '', t)
-
-              m.write_text(t)
-
-          print("FIX DONE")
+          root = Path("build.gradle")
+          if root.exists():
+              text = root.read_text()
+              text = re.sub(r'com\.android\.tools\.build:gradle:[0-9.]+', 'com.android.tools.build:gradle:8.5.2', text)
+              root.write_text(text)
           PY
 
-      - name: Create Missing Files - BuildConfig + BCrypt + AIDL
-        run: |
-          echo "=== AIDL FILES ==="
-          find . -name "*.aidl" -type f || echo "NO AIDL FOUND"
-
-          if ! find . -name "IUltraSSHServiceInternal.aidl" | grep -q .; then
-            echo "Creating stub AIDL..."
-            mkdir -p service/src/main/aidl/com/slipkprojects/ultrasshservice/aidl
-            cat > service/src/main/aidl/com/slipkprojects/ultrasshservice/aidl/IUltraSSHServiceInternal.aidl <<'AIDL'
-          package com.slipkprojects.ultrasshservice.aidl;
-          interface IUltraSSHServiceInternal {
-            void start();
-            void stop();
-            int getStatus();
-          }
-          AIDL
-          fi
-
-          cat service/src/main/aidl/com/slipkprojects/ultrasshservice/aidl/IUltraSSHServiceInternal.aidl || true
-
-
-      - name: Build APK
+      - name: Build debug APK
         run: |
           chmod +x gradlew
-          ./gradlew clean
-          ./gradlew assembleDebug --stacktrace
-          ls -lh app/build/outputs/apk/debug/
+          ./gradlew --no-daemon clean assembleDebug --stacktrace
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          ls -lh app/build/outputs/apk/debug/app-debug.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Elmaloo3n-VPN-APK
-          path: |
-            **/*.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
