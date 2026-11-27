@@ -58,6 +58,7 @@ public class SocksHttpApp extends Application
 			}
 		});
 		
+		markStartupStage(this, "APPLICATION: handler installed");
 		mApp = this;
 		
 		// captura dados para análise
@@ -69,16 +70,24 @@ public class SocksHttpApp extends Application
 			.build(this, APP_FLURRY_KEY);*/
 			
 		// inicia
+		markStartupStage(this, "APPLICATION: before SocksHttpCore.init");
 		SocksHttpCore.init(this);
+		markStartupStage(this, "APPLICATION: SocksHttpCore.init completed");
 		
 		// protege o app
+		markStartupStage(this, "APPLICATION: before SkProtect.init");
 		SkProtect.init(this);
+		markStartupStage(this, "APPLICATION: SkProtect.init completed");
 		
 		// Initialize the Mobile Ads SDK.
+        markStartupStage(this, "APPLICATION: before MobileAds.initialize");
         MobileAds.initialize(this);
+        markStartupStage(this, "APPLICATION: MobileAds.initialize completed");
 		
 		// modo noturno
+		markStartupStage(this, "APPLICATION: before setModoNoturno");
 		setModoNoturno(this);
+		markStartupStage(this, "APPLICATION: completed");
 	}
 	
 	@Override
@@ -101,6 +110,15 @@ public class SocksHttpApp extends Application
 		AppCompatDelegate.setDefaultNightMode(night_mode);
 	}
 	
+	public static void markStartupStage(Context context, String stage) {
+		try {
+			File stageFile = new File(context.getFilesDir(), "startup_stage.txt");
+			FileWriter writer = new FileWriter(stageFile, false);
+			writer.write(stage + "\\nAndroid SDK: " + Build.VERSION.SDK_INT + "\\nDevice: " + Build.MANUFACTURER + " " + Build.MODEL);
+			writer.close();
+		} catch (Throwable ignored) { }
+	}
+
 	public static SocksHttpApp getApp() {
 		return mApp;
 	}
