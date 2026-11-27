@@ -78,9 +78,6 @@ import java.io.IOException;
 import android.support.design.widget.NavigationView;
 import android.util.AttributeSet;
 import com.slipkprojects.sockshttp.util.GoogleFeedbackUtils;
-import com.google.android.gms.ads.AdView;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdListener;
 import com.slipkprojects.sockshttp.activities.BaseActivity;
 import com.slipkprojects.ultrasshservice.tunnel.TunnelUtils;
 import android.text.TextUtils;
@@ -127,7 +124,6 @@ public class SocksHttpMainActivity extends BaseActivity
 	private LinearLayout configMsgLayout;
 	private TextView configMsgText;
 
-	private AdView adsBannerView;
 	private TextView vpnElapsedText;
 	private TextView vpnSpeedText;
 	private long vpnConnectedSince = 0L;
@@ -236,27 +232,6 @@ public class SocksHttpMainActivity extends BaseActivity
 		setSupportActionBar(toolbar_main);
 
 		mDrawer.setDrawer(this);
-		
-		
-		// set ADS
-		adsBannerView = (AdView) findViewById(R.id.adBannerMainView);
-		
-		if (!BuildConfig.DEBUG) {
-			//adsBannerView.setAdUnitId(SocksHttpApp.ADS_UNITID_BANNER_MAIN);
-		}
-		
-		if (adsBannerView != null && TunnelUtils.isNetworkOnline(SocksHttpMainActivity.this)) {
-			adsBannerView.setAdListener(new AdListener() {
-				@Override
-				public void onAdLoaded() {
-					if (adsBannerView != null) {
-						adsBannerView.setVisibility(View.VISIBLE);
-					}
-				}
-			});
-			adsBannerView.loadAd(new AdRequest.Builder()
-				.build());
-		}
 		
 		
 		mainLayout = (LinearLayout) findViewById(R.id.activity_mainLinearLayout);
@@ -731,30 +706,6 @@ public class SocksHttpMainActivity extends BaseActivity
 
 		switch (state) {
 			case SkStatus.SSH_CONECTADO:
-				// carrega ads banner
-				if (adsBannerView != null && TunnelUtils.isNetworkOnline(SocksHttpMainActivity.this)) {
-					adsBannerView.setAdListener(new AdListener() {
-						@Override
-						public void onAdLoaded() {
-							if (adsBannerView != null && !isFinishing()) {
-								adsBannerView.setVisibility(View.VISIBLE);
-							}
-						}
-					});
-					adsBannerView.postDelayed(new Runnable() {
-						@Override
-						public void run() {
-							// carrega ads interestitial
-							AdsManager.newInstance(getApplicationContext())
-								.loadAdsInterstitial();
-							// ads banner
-							if (adsBannerView != null && !isFinishing()) {
-								adsBannerView.loadAd(new AdRequest.Builder()
-									.build());
-							}
-						}
-					}, 5000);
-				}
 			break;
 		}
 	}
@@ -900,9 +851,6 @@ public class SocksHttpMainActivity extends BaseActivity
 		mHandler.removeCallbacks(statsUpdater);
 		mHandler.post(statsUpdater);
 		
-		if (adsBannerView != null) {
-			adsBannerView.resume();
-		}
     }
 
 	@Override
@@ -915,9 +863,6 @@ public class SocksHttpMainActivity extends BaseActivity
 		SkStatus.removeStateListener(this);
 		mHandler.removeCallbacks(statsUpdater);
 		
-		if (adsBannerView != null) {
-			adsBannerView.pause();
-		}
 	}
 
 	@Override
@@ -930,9 +875,6 @@ public class SocksHttpMainActivity extends BaseActivity
 		LocalBroadcastManager.getInstance(this)
 			.unregisterReceiver(mActivityReceiver);
 			
-		if (adsBannerView != null) {
-			adsBannerView.destroy();
-		}
 	}
 
 
