@@ -3,10 +3,10 @@
 	
 	
 	<!-- Style geral do app -->
-    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
-		<item name="colorPrimary">@color/colorPrimary</item>
-		<item name="colorPrimaryDark">@color/colorSecondary</item>
-		<item name="colorAccent">@color/colorAccent</item>
+    <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
+		<item name="colorPrimary">#170609</item>
+		<item name="colorPrimaryDark">#080305</item>
+		<item name="colorAccent">#FF263F</item>
 		<item name="preferenceTheme">@style/AppPreference</item>
 		<item name="alertDialogTheme">@style/AppAlertDialog</item>
 		
@@ -21,7 +21,7 @@
 	
 	<!-- Alert Dialog -->
 	<style name="AppAlertDialog"
-        parent="Theme.AppCompat.Light.Dialog.Alert">
+        parent="Theme.AppCompat.Dialog.Alert">
 		<item name="colorAccent">@color/colorAccent</item>
 		<item name="android:textColor">@color/colorText</item>
 		<item name="android:textColorHint">@color/colorText</item>
@@ -68,11 +68,12 @@
 	</style>
 		
 	<!-- Style for Splash Screen -->
-    <style name="SplashScreenTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="SplashScreenTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
 		<item name="colorPrimaryDark">@color/colorSecondary</item>
 		<item name="colorAccent">@color/colorAccent</item>
 		<item name ="android:windowBackground">@drawable/splash_screen_background</item>
+        <item name="android:statusBarColor">#080305</item>
 		<item name="android:navigationBarColor" tools:targetApi="21">@color/colorSecondary</item>
     </style>
 	
