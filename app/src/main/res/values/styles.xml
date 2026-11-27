@@ -42,15 +42,15 @@
 		<!-- android:textColorPrimary is the color of the title text in the Toolbar  -->
 		<item name="android:textColorPrimary">@color/white</item>
 		<!-- actionMenuTextColor is the color of the text of action (menu) items  -->
-		<item name="actionMenuTextColor">@android:color/holo_green_light</item>
+		<item name="actionMenuTextColor">#FF263F</item>
 		<!-- Tints the input fields like checkboxes and text fields -->
-		<item name="colorAccent">@color/gray</item>
+		<item name="colorAccent">#FF263F</item>
 		<!-- Applies to views in their normal state. -->
 		<item name="colorControlNormal">@color/white</item>
 		<!-- Applies to views in their activated state (i.e checked or switches) -->
-		<item name="colorControlActivated">@color/blue_light</item>
+		<item name="colorControlActivated">#FF263F</item>
 		<!-- Applied to framework control highlights (i.e ripples or list selectors) -->
-		<item name="colorControlHighlight">@color/gray_light</item>
+		<item name="colorControlHighlight">#66FF263F</item>
 
 		<!-- Enable these below if you want clicking icons to trigger a ripple effect -->
 		<!-- 
