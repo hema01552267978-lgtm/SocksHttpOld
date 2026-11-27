@@ -24,6 +24,37 @@ public class LauncherActivity extends BaseActivity
         super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_splash_screen);
         
+        final File stageFile = new File(getFilesDir(), "startup_stage.txt");
+        if (stageFile.exists()) {
+            try {
+                FileInputStream stageInput = new FileInputStream(stageFile);
+                ByteArrayOutputStream stageOutput = new ByteArrayOutputStream();
+                byte[] stageBuffer = new byte[1024];
+                int stageCount;
+                while ((stageCount = stageInput.read(stageBuffer)) != -1) stageOutput.write(stageBuffer, 0, stageCount);
+                stageInput.close();
+                final String previousStage = stageOutput.toString("UTF-8");
+                if (!previousStage.contains("MAIN_READY")) {
+                    new AlertDialog.Builder(this)
+                        .setTitle("تشخيص توقف التطبيق")
+                        .setMessage("آخر مرحلة وصل لها التطبيق قبل الإغلاق:\\n\\n" + previousStage)
+                        .setCancelable(false)
+                        .setPositiveButton("نسخ التشخيص وفتح التطبيق", (dialog, which) -> {
+                            ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                            clipboard.setPrimaryClip(ClipData.newPlainText("Startup diagnostic", previousStage));
+                            stageFile.delete();
+                            startMainScreen();
+                        })
+                        .setNegativeButton("فتح التطبيق", (dialog, which) -> {
+                            stageFile.delete();
+                            startMainScreen();
+                        })
+                        .show();
+                    return;
+                }
+            } catch (Exception ignored) { stageFile.delete(); }
+        }
+        SocksHttpApp.markStartupStage(this, "LAUNCHER: splash displayed");
         final File crashFile = new File(getFilesDir(), "last_crash.txt");
         if (crashFile.exists()) {
             try {
