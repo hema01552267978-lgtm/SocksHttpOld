@@ -4,7 +4,7 @@
 	xmlns:app="http://schemas.android.com/apk/res-auto"
 	xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/drawerLayoutMain"
-	android:layout_height="match_parent" android:background="#FF080A10"
+	android:layout_height="match_parent" android:background="#FF050507"
 	android:layout_width="match_parent"
 	android:fitsSystemWindows="true"
 	tools:openDrawer="start">
@@ -14,7 +14,7 @@
 		android:layout_height="match_parent"
 		android:gravity="center_horizontal|center_vertical"
 		android:orientation="vertical"
-		android:background="@drawable/my_photo">
+		android:background="@drawable/main_background">
 
 		<include
 			android:layout_height="wrap_content"
@@ -36,7 +36,7 @@
 				android:orientation="vertical"
 				android:layout_gravity="end"
 				android:padding="6dp"
-				android:background="@drawable/my_photo">
+				android:background="#F20A0709">
 
 				<android.support.v7.widget.RecyclerView
 					android:id="@+id/recyclerDrawerView"
