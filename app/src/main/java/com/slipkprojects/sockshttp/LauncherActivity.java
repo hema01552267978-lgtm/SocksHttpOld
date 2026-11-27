@@ -56,23 +56,30 @@ public class LauncherActivity extends Activity {
 
         SocksHttpApp.markStartupStage(this, "LAUNCHER: native Activity created");
 
-        if (previousStage != null && !previousStage.trim().isEmpty()) {
-            showDiagnostic("تشخيص توقف التطبيق",
-                "آخر مرحلة محفوظة من التشغيل السابق:\n\n" + previousStage,
-                "نسخ التشخيص وفتح التطبيق", previousStage);
-            return;
-        }
-
         final File crashFile = new File(getFilesDir(), "last_crash.txt");
+        String crashText = null;
         if (crashFile.exists()) {
             try {
-                final String crashText = readText(crashFile);
-                showDiagnostic("تم تسجيل خطأ في التشغيل", crashText,
-                    "نسخ الخطأ وفتح التطبيق", crashText);
-                return;
+                crashText = readText(crashFile);
             } catch (Exception ignored) {
                 crashFile.delete();
             }
+        }
+
+        if ((previousStage != null && !previousStage.trim().isEmpty())
+                || (crashText != null && !crashText.trim().isEmpty())) {
+            StringBuilder diagnostic = new StringBuilder();
+            if (previousStage != null && !previousStage.trim().isEmpty()) {
+                diagnostic.append("آخر مرحلة محفوظة من التشغيل السابق:\n")
+                    .append(previousStage).append("\n\n");
+            }
+            if (crashText != null && !crashText.trim().isEmpty()) {
+                diagnostic.append("تفاصيل الخطأ المسجل:\n").append(crashText);
+            }
+            String details = diagnostic.toString();
+            showDiagnostic("تشخيص توقف التطبيق",
+                details, "نسخ التشخيص وفتح التطبيق", details);
+            return;
         }
 
         startMainScreen();
