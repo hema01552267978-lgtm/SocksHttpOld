@@ -279,6 +279,16 @@ public class SocksHttpMainActivity extends BaseActivity
 		metodoConexaoRadio.setOnCheckedChangeListener(this);
 		customPayloadSwitch.setOnCheckedChangeListener(this);
 		inputPwShowPass.setOnClickListener(this);
+
+        Button developerContactButton = (Button) findViewById(R.id.btn_wa_dev);
+        developerContactButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent contactIntent = new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("https://wa.me/201552267978"));
+                startActivity(contactIntent);
+            }
+        });
 	}
 	
 	private void doUpdateLayout() {
