@@ -147,7 +147,8 @@ public class SocksHttpMainActivity extends BaseActivity
     {
         super.onCreate(savedInstanceState);
         // BaseActivity applies the saved local night mode after AppCompat initialization.
-        // Do not change the global AppCompat mode before the Activity is attached.
+        // Initialize legacy networking/ads only after the native launcher reaches this screen.
+        SocksHttpApp.initializeComponents(this);
 
 		SocksHttpApp.markStartupStage(this, "MAIN: onCreate entered");
 		mHandler = new Handler();
