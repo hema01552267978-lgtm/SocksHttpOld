@@ -1,0 +1,81 @@
+name: Android Build and Startup Test
+
+on:
+  push:
+    branches: [ main, master, fix-bcrypt-build ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-smoke-test:
+    name: Build and launch on Android ${{ matrix.api-level }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [35, 36]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Build debug APK
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon clean assembleDebug --stacktrace
+          test -s app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Launch app on Android Emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          arch: x86_64
+          target: google_apis
+          profile: pixel_2
+          emulator-options: -no-window -no-audio -no-boot-anim
+          disable-animations: true
+          script: |
+            set -eu
+            APK="app/build/outputs/apk/debug/app-debug.apk"
+            PACKAGE="com.slipkprojects.sockshttp"
+            adb install -r "$APK"
+            adb logcat -c
+            adb shell am force-stop "$PACKAGE"
+            adb shell am start -W -n "$PACKAGE/.LauncherActivity"
+            sleep 25
+            adb logcat -d -v threadtime > emulator-logcat.txt
+            if ! adb shell pidof "$PACKAGE" >/dev/null 2>&1; then
+              echo "FAIL: app process is not running after launch."
+              tail -n 250 emulator-logcat.txt
+              exit 1
+            fi
+            if grep -E "FATAL EXCEPTION|Process: ${PACKAGE}.*(died|has died)" emulator-logcat.txt; then
+              echo "FAIL: fatal app exception detected."
+              exit 1
+            fi
+            echo "PASS: app process remained alive for 25 seconds on API ${{ matrix.api-level }}."
+
+      - name: Upload emulator log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: emulator-log-API-${{ matrix.api-level }}
+          path: emulator-logcat.txt
+          if-no-files-found: ignore
+
+      - name: Publish APK only after startup test passes
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Elmaloo3n-VPN-API-${{ matrix.api-level }}
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
