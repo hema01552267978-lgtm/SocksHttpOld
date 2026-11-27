@@ -11,7 +11,7 @@ permissions:
 jobs:
   build-and-smoke-test:
     name: Build and launch on Android 36
-    runs-on: ubuntu-22.04
+    runs-on: macos-14
     timeout-minutes: 35
 
     steps:
@@ -30,17 +30,6 @@ jobs:
           chmod +x gradlew
           ./gradlew --no-daemon clean assembleDebug --stacktrace
           test -s app/build/outputs/apk/debug/app-debug.apk
-
-      - name: Check KVM availability
-        run: |
-          echo "Runner kernel:"
-          uname -a
-          echo "KVM device:"
-          if [ -e /dev/kvm ]; then
-            ls -l /dev/kvm
-          else
-            echo "WARNING: /dev/kvm is not present on this runner."
-          fi
 
       - name: Launch app on Android Emulator
         uses: reactivecircus/android-emulator-runner@v2
