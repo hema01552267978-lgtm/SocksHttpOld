@@ -326,6 +326,20 @@ public class SocksHttpMainActivity extends BaseActivity
 				connectionStatusText.setTextColor(0xFFFF7183);
 			}
 		}
+		// Keep the timer synchronized with the real tunnel state on every sample.
+		boolean tunnelNowActive = SkStatus.isTunnelActive()
+			|| SkStatus.SSH_CONECTADO.equals(SkStatus.getLastState());
+		if (tunnelNowActive && !vpnIsConnected) {
+			vpnIsConnected = true;
+			vpnConnectedSince = System.currentTimeMillis();
+			getSharedPreferences("connection_stats", MODE_PRIVATE).edit()
+				.putLong("connected_since", vpnConnectedSince).apply();
+		} else if (!tunnelNowActive && vpnIsConnected) {
+			vpnIsConnected = false;
+			vpnConnectedSince = 0L;
+			getSharedPreferences("connection_stats", MODE_PRIVATE).edit()
+				.remove("connected_since").apply();
+		}
 		if (vpnIsConnected && vpnConnectedSince > 0L) {
 			long elapsed = Math.max(0L, (System.currentTimeMillis() - vpnConnectedSince) / 1000L);
 			long hours = elapsed / 3600L;
