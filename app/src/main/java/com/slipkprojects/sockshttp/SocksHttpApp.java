@@ -9,6 +9,7 @@ import com.slipkprojects.ultrasshservice.SocksHttpCore;
 import com.slipkprojects.ultrasshservice.util.SkProtect;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.PrintWriter;
@@ -59,11 +60,23 @@ public class SocksHttpApp extends Application {
         File current = new File(getFilesDir(), "startup_stage.txt");
         File previous = new File(getFilesDir(), "previous_startup_stage.txt");
         if (!current.exists()) { previous.delete(); return; }
-        try (FileInputStream input = new FileInputStream(current);
-             FileOutputStream output = new FileOutputStream(previous, false)) {
-            byte[] buffer = new byte[1024];
+        try (FileInputStream input = new FileInputStream(current)) {
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            byte[] chunk = new byte[1024];
             int count;
-            while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+            while ((count = input.read(chunk)) != -1) buffer.write(chunk, 0, count);
+            String lastStage = buffer.toString("UTF-8");
+
+            // A fully initialized main screen means the prior process had already
+            // completed startup; do not misreport a normal later process death as a crash.
+            if (lastStage.contains("MAIN_READY:")) {
+                previous.delete();
+                return;
+            }
+
+            try (FileOutputStream output = new FileOutputStream(previous, false)) {
+                output.write(lastStage.getBytes("UTF-8"));
+            }
         } catch (Throwable error) {
             Log.e(TAG, "Could not preserve previous startup stage", error);
         }
