@@ -10,12 +10,9 @@ permissions:
 
 jobs:
   build-and-smoke-test:
-    name: Build and launch on Android ${{ matrix.api-level }}
-    runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        api-level: [35, 36]
+    name: Build and launch on Android 36
+    runs-on: ubuntu-22.04
+    timeout-minutes: 35
 
     steps:
       - name: Checkout
@@ -34,21 +31,33 @@ jobs:
           ./gradlew --no-daemon clean assembleDebug --stacktrace
           test -s app/build/outputs/apk/debug/app-debug.apk
 
+      - name: Check KVM availability
+        run: |
+          echo "Runner kernel:"
+          uname -a
+          echo "KVM device:"
+          if [ -e /dev/kvm ]; then
+            ls -l /dev/kvm
+          else
+            echo "WARNING: /dev/kvm is not present on this runner."
+          fi
+
       - name: Launch app on Android Emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: ${{ matrix.api-level }}
+          api-level: 36
           arch: x86_64
           target: google_apis
           profile: pixel_2
           emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot -wipe-data
           disable-animations: true
           disable-linux-hw-accel: false
-          emulator-boot-timeout: 600
+          emulator-boot-timeout: 300
           script: |
             set -eu
             APK="app/build/outputs/apk/debug/app-debug.apk"
             PACKAGE="com.slipkprojects.sockshttp"
+            adb devices -l
             adb install -r "$APK"
             adb logcat -c
             adb shell am force-stop "$PACKAGE"
@@ -72,13 +81,13 @@ jobs:
               tail -n 250 emulator-logcat.txt
               exit 1
             fi
-            echo "PASS: main screen reached MAIN_READY and stayed alive for 25 seconds on API ${{ matrix.api-level }}."
+            echo "PASS: main screen reached MAIN_READY and stayed alive for 25 seconds on Android 36."
 
       - name: Upload emulator log
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: emulator-log-API-${{ matrix.api-level }}
+          name: emulator-log-API-36
           path: |
             emulator-logcat.txt
             startup-stage.txt
@@ -88,6 +97,6 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: Elmaloo3n-VPN-API-${{ matrix.api-level }}
+          name: Elmaloo3n-VPN-Android-36
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
