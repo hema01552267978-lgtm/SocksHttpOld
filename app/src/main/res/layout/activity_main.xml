@@ -1,382 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/main_background"
-    android:fillViewport="true">
-
-    <LinearLayout
-        android:id="@+id/activity_mainLinearLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="14dp"
-        android:paddingBottom="28dp"
-        android:gravity="center_horizontal"
-        android:focusable="true"
-        android:focusableInTouchMode="true">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:padding="14dp"
-            android:background="@drawable/panel_glass">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="✹  ELMALOO3N VPN  ✹"
-                android:textColor="#FFFF334F"
-                android:textStyle="bold"
-                android:textSize="25sp"
-                android:gravity="center"
-                android:letterSpacing="0.04" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="آمن • خاص • اتصال مستقر"
-                android:textColor="#FFE8DDE0"
-                android:textSize="10sp"
-                android:letterSpacing="0.18"
-                android:gravity="center"
-                android:layout_marginTop="4dp" />
-
-            <TextView
-                android:id="@+id/tv_marquee"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="🔥 مرحباً بك في تطبيق ELMALOO3N VPN 🔥"
-                android:textColor="#FFFF7183"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:gravity="center"
-                android:singleLine="true"
-                android:ellipsize="marquee"
-                android:marqueeRepeatLimit="marquee_forever"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                android:layout_marginTop="8dp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:padding="16dp"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/panel_glass">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="حالة الاتصال"
-                android:textColor="#FFFFFFFF"
-                android:textStyle="bold"
-                android:textSize="17sp" />
-
-            <TextView
-                android:id="@+id/activity_mainAutorText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="✹ ELMALOO3N VPN ✹"
-                android:textColor="#FFFF526B"
-                android:textStyle="bold"
-                android:textSize="12sp"
-                android:layout_marginTop="5dp" />
-
-            <Button
-                android:id="@+id/activity_starterButtonMain"
-                android:layout_width="220dp"
-                android:layout_height="64dp"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/button_red"
-                android:text="@string/start"
-                android:textColor="#FFFFFFFF"
-                android:textSize="21sp"
-                android:textStyle="bold"
-                android:elevation="6dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="اضغط للاتصال أو فصل الاتصال"
-                android:textColor="#FFD9C7CC"
-                android:textSize="12sp"
-                android:layout_marginTop="8dp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/connection_stats_panel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="14dp"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/panel_glass">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="إحصائيات الاتصال"
-                android:textColor="#FFFF526B"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:gravity="center" />
-
-            <TextView
-                android:id="@+id/vpn_elapsed_time"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="مدة الاتصال: غير متصل"
-                android:textColor="#FFFFFFFF"
-                android:textSize="14sp"
-                android:gravity="center"
-                android:paddingTop="10dp" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#55FF526B"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp" />
-
-            <TextView
-                android:id="@+id/config_expiry_time"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="صلاحية الكونفج: جارٍ الفحص..."
-                android:textColor="#FFFF7183"
-                android:textSize="14sp"
-                android:gravity="center"
-                android:paddingTop="8dp" />
-
-            <TextView
-                android:id="@+id/vpn_network_speed"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="سرعة الجهاز: جارٍ القياس..."
-                android:textColor="#FFFFFFFF"
-                android:textSize="14sp"
-                android:gravity="center" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/activity_mainInputProxyLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="14dp"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/panel_glass"
-            android:clickable="true"
-            android:focusable="true">
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="إعدادات الخادم والوكيل"
-                    android:textColor="#FFFF526B"
-                    android:textStyle="bold"
-                    android:textSize="15sp" />
-
-                <TextView
-                    android:id="@+id/activity_mainProxyText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/no_value"
-                    android:textColor="#FFFFFFFF"
-                    android:textSize="13sp"
-                    android:layout_marginTop="4dp" />
-            </LinearLayout>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="تعديل  ›"
-                android:textColor="#FFFF7183"
-                android:textStyle="bold"
-                android:textSize="13sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/activity_mainInputPasswordLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:padding="14dp"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/panel_glass">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/title_login_main"
-                android:textColor="#FFFF526B"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                android:gravity="center"
-                android:layout_marginBottom="8dp" />
-
-            <android.support.design.widget.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-                <android.support.design.widget.TextInputEditText
-                    android:id="@+id/activity_mainInputPasswordUserEdit"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:singleLine="true"
-                    android:textColor="#FFFFFFFF"
-                    android:hint="@string/auth_username" />
-            </android.support.design.widget.TextInputLayout>
-
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp">
-                <android.support.design.widget.TextInputLayout
-                    android:id="@+id/fragment_userpassTextInputLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <android.support.design.widget.TextInputEditText
-                        android:id="@+id/activity_mainInputPasswordPassEdit"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:singleLine="true"
-                        android:inputType="textPassword"
-                        android:textColor="#FFFFFFFF"
-                        android:hint="@string/password" />
-                </android.support.design.widget.TextInputLayout>
-                <ImageButton
-                    android:id="@+id/activity_mainInputShowPassImageButton"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:layout_alignParentEnd="true"
-                    android:src="@drawable/ic_visibility_off_black_24dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/show_password" />
-            </RelativeLayout>
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/activity_mainMetodoConexaoLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:padding="12dp"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/panel_glass">
-
-            <TextView
-                android:id="@+id/activity_mainMetodoConexaoText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/method_connection"
-                android:textColor="#FFFF526B"
-                android:textStyle="bold"
-                android:textSize="15sp" />
-
-            <RadioGroup
-                android:id="@+id/activity_mainMetodoConexaoRadio"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center">
-                <android.support.v7.widget.AppCompatRadioButton
-                    android:id="@+id/activity_mainSSHDirectRadioButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="اتصال مباشر"
-                    android:textColor="#FFFFFFFF"
-                    android:padding="6dp" />
-                <android.support.v7.widget.AppCompatRadioButton
-                    android:id="@+id/activity_mainSSHProxyRadioButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="SSH مع وكيل"
-                    android:textColor="#FFFFFFFF"
-                    android:padding="6dp" />
-            </RadioGroup>
-
-            <android.support.v7.widget.SwitchCompat
-                android:id="@+id/activity_mainCustomPayloadSwitch"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="نص اتصال مخصص"
-                android:textColor="#FFFFFFFF"
-                android:layout_gravity="end" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/activity_mainInputPayloadLinearLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="10dp"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/panel_glass">
-
-            <android.support.design.widget.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-                <android.support.design.widget.TextInputEditText
-                    android:id="@+id/activity_mainInputPayloadEditText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="textMultiLine|textLongMessage"
-                    android:textColor="#FFFFFFFF"
-                    android:hint="@string/payload" />
-            </android.support.design.widget.TextInputLayout>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:padding="10dp"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/panel_glass">
-
-            <Button
-                android:id="@+id/btn_wa_dev"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:text="تواصل مع المطور عبر واتساب"
-                android:textColor="#FFFFFFFF"
-                android:backgroundTint="#B50918" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/activity_mainMensagemConfigLinearLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="10dp"
-            android:layout_margin="5dp"
-            android:background="@drawable/panel_glass"
-            android:visibility="gone">
-            <TextView
-                android:id="@+id/activity_mainMensagemConfigTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="#FFFFFFFF"
-                android:autoLink="web" />
-        </LinearLayout>
-    </LinearLayout>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
+ android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/main_background" android:fillViewport="true">
+ <LinearLayout android:id="@+id/activity_mainLinearLayout" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:gravity="center_horizontal" android:padding="14dp" android:focusable="true" android:focusableInTouchMode="true">
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:gravity="center" android:padding="12dp" android:background="@drawable/panel_glass">
+   <ImageView android:layout_width="100dp" android:layout_height="100dp" android:src="@drawable/skull_fire_icon" android:contentDescription="شعار التطبيق" android:scaleType="fitCenter"/>
+   <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="✹⃝𝑰🇵🇸⃝𝑬𝑳M𝑨𝑳oo3n✯" android:textColor="#FFFF526F" android:textStyle="bold" android:textSize="22sp" android:gravity="center"/>
+   <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ELMALOO3N VPN" android:textColor="#FFFFFFFF" android:textStyle="bold" android:textSize="15sp" android:gravity="center"/>
+   <TextView android:id="@+id/tv_marquee" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🔥 مرحباً بك في تطبيق ELMALOO3N VPN 🔥" android:textColor="#FFFFA0AD" android:textSize="12sp" android:textStyle="bold" android:gravity="center" android:singleLine="true" android:ellipsize="marquee" android:marqueeRepeatLimit="marquee_forever" android:focusable="true" android:focusableInTouchMode="true" android:layout_marginTop="6dp"/>
+  </LinearLayout>
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:gravity="center" android:padding="12dp" android:layout_marginTop="10dp" android:background="@drawable/panel_glass">
+   <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="حالة الاتصال" android:textColor="#FFFFFFFF" android:textStyle="bold" android:textSize="16sp"/>
+   <TextView android:id="@+id/activity_mainAutorText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="جاهز للاتصال" android:textColor="#FFFF7183" android:textStyle="bold" android:textSize="13sp" android:layout_marginTop="4dp"/>
+   <Button android:id="@+id/activity_starterButtonMain" android:layout_width="184dp" android:layout_height="184dp" android:layout_marginTop="12dp" android:background="@drawable/button_connect" android:text="@string/start" android:textColor="#FFFFFFFF" android:textSize="22sp" android:textStyle="bold" android:elevation="8dp"/>
+   <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="اضغط للاتصال أو فصل الاتصال" android:textColor="#FFF5F6FA" android:textSize="12sp" android:layout_marginTop="7dp"/>
+  </LinearLayout>
+  <LinearLayout android:id="@+id/connection_stats_panel" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="12dp" android:layout_marginTop="10dp" android:background="@drawable/panel_glass">
+   <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="إحصائيات الاتصال" android:textColor="#FFFF7183" android:textSize="16sp" android:textStyle="bold" android:gravity="center"/>
+   <TextView android:id="@+id/vpn_network_speed" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="سرعة الإنترنت: جارٍ القياس..." android:textColor="#FFFFFFFF" android:textSize="15sp" android:gravity="center" android:paddingTop="9dp"/>
+   <TextView android:id="@+id/vpn_elapsed_time" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="مدة الاتصال: غير متصل" android:textColor="#FFFFFFFF" android:textSize="15sp" android:gravity="center" android:paddingTop="7dp"/>
+   <TextView android:id="@+id/config_expiry_time" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="صلاحية الكونفج: جارٍ الفحص..." android:textColor="#FFFFA0AD" android:textSize="15sp" android:gravity="center" android:paddingTop="7dp"/>
+  </LinearLayout>
+  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="إعدادات الكونفج" android:textColor="#FFFF7183" android:textStyle="bold" android:textSize="18sp" android:gravity="center" android:layout_marginTop="14dp" android:layout_marginBottom="7dp"/>
+  <LinearLayout android:id="@+id/activity_mainInputProxyLayout" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:padding="13dp" android:background="@drawable/panel_glass" android:clickable="true" android:focusable="true">
+   <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="الخادم والمنفذ والوكيل" android:textColor="#FFFF7183" android:textStyle="bold" android:textSize="15sp"/>
+    <TextView android:id="@+id/activity_mainProxyText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/no_value" android:textColor="#FFFFFFFF" android:textSize="13sp" android:layout_marginTop="4dp"/>
+   </LinearLayout>
+   <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="تعديل  ›" android:textColor="#FFFFA0AD" android:textStyle="bold" android:textSize="13sp"/>
+  </LinearLayout>
+  <LinearLayout android:id="@+id/activity_mainInputPasswordLayout" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:gravity="center" android:padding="13dp" android:layout_marginTop="9dp" android:background="@drawable/panel_glass">
+   <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="بيانات تسجيل الدخول" android:textColor="#FFFF7183" android:textStyle="bold" android:textSize="16sp" android:gravity="center" android:layout_marginBottom="7dp"/>
+   <android.support.design.widget.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+    <android.support.design.widget.TextInputEditText android:id="@+id/activity_mainInputPasswordUserEdit" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:textColor="#FFFFFFFF" android:textColorHint="#FFB8C0CC" android:hint="@string/auth_username"/>
+   </android.support.design.widget.TextInputLayout>
+   <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp">
+    <android.support.design.widget.TextInputLayout android:id="@+id/fragment_userpassTextInputLayout" android:layout_width="match_parent" android:layout_height="wrap_content">
+     <android.support.design.widget.TextInputEditText android:id="@+id/activity_mainInputPasswordPassEdit" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:inputType="textPassword" android:textColor="#FFFFFFFF" android:textColorHint="#FFB8C0CC" android:hint="@string/password"/>
+    </android.support.design.widget.TextInputLayout>
+    <ImageButton android:id="@+id/activity_mainInputShowPassImageButton" android:layout_width="48dp" android:layout_height="48dp" android:layout_alignParentEnd="true" android:src="@drawable/ic_visibility_off_black_24dp" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="@string/show_password"/>
+   </RelativeLayout>
+  </LinearLayout>
+  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="البايلود (Payload)" android:textColor="#FFFF7183" android:textStyle="bold" android:textSize="18sp" android:gravity="center" android:layout_marginTop="14dp" android:layout_marginBottom="7dp"/>
+  <LinearLayout android:id="@+id/activity_mainMetodoConexaoLayout" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:gravity="center" android:padding="12dp" android:background="@drawable/panel_glass">
+   <TextView android:id="@+id/activity_mainMetodoConexaoText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/method_connection" android:textColor="#FFFF7183" android:textStyle="bold" android:textSize="15sp"/>
+   <RadioGroup android:id="@+id/activity_mainMetodoConexaoRadio" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center">
+    <android.support.v7.widget.AppCompatRadioButton android:id="@+id/activity_mainSSHDirectRadioButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="اتصال مباشر" android:textColor="#FFFFFFFF" android:padding="6dp"/>
+    <android.support.v7.widget.AppCompatRadioButton android:id="@+id/activity_mainSSHProxyRadioButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="SSH مع وكيل" android:textColor="#FFFFFFFF" android:padding="6dp"/>
+   </RadioGroup>
+   <android.support.v7.widget.SwitchCompat android:id="@+id/activity_mainCustomPayloadSwitch" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="تفعيل البايلود المخصص" android:textColor="#FFFFFFFF" android:layout_gravity="end"/>
+  </LinearLayout>
+  <LinearLayout android:id="@+id/activity_mainInputPayloadLinearLayout" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="12dp" android:layout_marginTop="8dp" android:background="@drawable/panel_glass">
+   <android.support.design.widget.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+    <android.support.design.widget.TextInputEditText android:id="@+id/activity_mainInputPayloadEditText" android:layout_width="match_parent" android:layout_height="wrap_content" android:minLines="5" android:gravity="top|start" android:inputType="textMultiLine|textLongMessage" android:textColor="#FFFFFFFF" android:textColorHint="#FFB8C0CC" android:hint="اكتب البايلود هنا..."/>
+   </android.support.design.widget.TextInputLayout>
+  </LinearLayout>
+  <Button android:id="@+id/btn_wa_dev" android:layout_width="match_parent" android:layout_height="50dp" android:layout_marginTop="12dp" android:text="تواصل مع المطور" android:textColor="#FFFFFFFF" android:background="@drawable/button_red"/>
+  <LinearLayout android:id="@+id/activity_mainMensagemConfigLinearLayout" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="10dp" android:layout_margin="5dp" android:background="@drawable/panel_glass" android:visibility="gone">
+   <TextView android:id="@+id/activity_mainMensagemConfigTextView" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#FFFFFFFF" android:autoLink="web"/>
+  </LinearLayout>
+ </LinearLayout>
 </ScrollView>
