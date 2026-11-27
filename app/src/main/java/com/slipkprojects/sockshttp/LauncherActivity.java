@@ -37,7 +37,7 @@ public class LauncherActivity extends BaseActivity
                 if (!previousStage.contains("MAIN_READY")) {
                     new AlertDialog.Builder(this)
                         .setTitle("تشخيص توقف التطبيق")
-                        .setMessage("آخر مرحلة وصل لها التطبيق قبل الإغلاق:\\n\\n" + previousStage)
+                        .setMessage("آخر مرحلة وصل لها التطبيق قبل الإغلاق:\n\n" + previousStage)
                         .setCancelable(false)
                         .setPositiveButton("نسخ التشخيص وفتح التطبيق", (dialog, which) -> {
                             ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
