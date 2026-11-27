@@ -4,12 +4,14 @@
 	
 	<!-- Idioma -->
 	<array name="pref_idioma_option_labels">
-        <item>Default</item>
-	    <item>Español</item>
-		<item>Português [BR]</item>
+        <item>العربية</item>
+        <item>لغة الجهاز</item>
+	    <item>الإسبانية</item>
+		<item>البرتغالية [البرازيل]</item>
     </array>
 
     <array name="pref_idioma_option_values">
+        <item>ar</item>
         <item>default</item>
         <item>es</item>
 		<item>pt-BR</item>
