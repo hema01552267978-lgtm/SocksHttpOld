@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.util.Log;
-import com.google.android.gms.ads.MobileAds;
 import com.slipkprojects.ultrasshservice.SocksHttpCore;
 import com.slipkprojects.ultrasshservice.util.SkProtect;
 import java.io.File;
@@ -51,7 +50,6 @@ public class SocksHttpApp extends Application {
         componentsInitialized = true;
         runStartupStep(context, "SocksHttpCore.init", () -> SocksHttpCore.init(context.getApplicationContext()));
         runStartupStep(context, "SkProtect.init", () -> SkProtect.init(context.getApplicationContext()));
-        runStartupStep(context, "MobileAds.initialize", () -> MobileAds.initialize(context.getApplicationContext()));
     }
 
     @Override protected void attachBaseContext(Context base) { super.attachBaseContext(base); }
