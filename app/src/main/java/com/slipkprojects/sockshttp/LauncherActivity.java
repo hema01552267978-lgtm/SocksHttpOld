@@ -39,12 +39,13 @@ public class LauncherActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         TextView splash = new TextView(this);
-        splash.setText("ELMALOO3N VPN");
+        splash.setText("");
         splash.setTextColor(Color.WHITE);
         splash.setTextSize(25);
         splash.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         splash.setGravity(Gravity.CENTER);
-        splash.setBackgroundColor(Color.rgb(8, 3, 5));
+        splash.setBackgroundResource(R.drawable.splash_screen_background);
+        splash.setContentDescription("ELMALOO3N VPN");
         setContentView(splash);
 
         File stageFile = new File(getFilesDir(), "previous_startup_stage.txt");
