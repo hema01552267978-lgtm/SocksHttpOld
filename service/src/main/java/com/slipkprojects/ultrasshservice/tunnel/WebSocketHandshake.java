@@ -66,18 +66,18 @@ final class WebSocketHandshake {
             if (budget[0] > MAX_HEADER_BYTES) {
                 throw new IOException("WebSocket response headers are too large");
             }
-            if (value == '\\r') {
+            if (value == '\r') {
                 int next = input.read();
                 if (next == -1) {
                     throw new IOException("Incomplete WebSocket response line");
                 }
                 budget[0]++;
-                if (budget[0] > MAX_HEADER_BYTES || next != '\\n') {
+                if (budget[0] > MAX_HEADER_BYTES || next != '\n') {
                     throw new IOException("Malformed WebSocket response line ending");
                 }
                 return line.toString();
             }
-            if (value == '\\n') {
+            if (value == '\n') {
                 throw new IOException("Malformed WebSocket response line ending");
             }
             if (line.length() >= MAX_LINE_BYTES) {
