@@ -42,8 +42,9 @@ public class SocksHttpApp extends Application
 	public void onCreate()
 	{
 		super.onCreate();
-		preservePreviousStartupStage();
 
+		// Install crash reporting before any file or app initialization work.
+		// This captures failures that occur while preserving the previous startup stage.
 		// Save uncaught startup crashes so they can be shown on the next launch.
 		final Thread.UncaughtExceptionHandler previousHandler = Thread.getDefaultUncaughtExceptionHandler();
 		Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
@@ -60,7 +61,8 @@ public class SocksHttpApp extends Application
 				if (previousHandler != null) previousHandler.uncaughtException(thread, error);
 			}
 		});
-		
+
+		preservePreviousStartupStage();
 		markStartupStage(this, "APPLICATION: handler installed");
 		mApp = this;
 		
