@@ -13,6 +13,9 @@ import android.content.pm.PackageManager;
 import com.slipkprojects.ultrasshservice.SocksHttpCore;
 import com.slipkprojects.ultrasshservice.config.Settings;
 import android.util.Log;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import com.google.android.gms.ads.MobileAds;
 import android.content.res.Configuration;
 import com.slipkprojects.sockshttp.preference.LocaleHelper;
@@ -37,6 +40,23 @@ public class SocksHttpApp extends Application
 	public void onCreate()
 	{
 		super.onCreate();
+
+		// Save uncaught startup crashes so they can be shown on the next launch.
+		final Thread.UncaughtExceptionHandler previousHandler = Thread.getDefaultUncaughtExceptionHandler();
+		Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+			@Override public void uncaughtException(Thread thread, Throwable error) {
+				try {
+					File crashFile = new File(getFilesDir(), "last_crash.txt");
+					PrintWriter writer = new PrintWriter(new FileWriter(crashFile, false));
+					writer.println("ELMALOO3N VPN startup crash");
+					writer.println("Android SDK: " + Build.VERSION.SDK_INT);
+					writer.println("Device: " + Build.MANUFACTURER + " " + Build.MODEL);
+					error.printStackTrace(writer);
+					writer.close();
+				} catch (Throwable ignored) { }
+				if (previousHandler != null) previousHandler.uncaughtException(thread, error);
+			}
+		});
 		
 		mApp = this;
 		
