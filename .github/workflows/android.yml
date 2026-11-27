@@ -160,10 +160,6 @@ jobs:
 
           cat service/src/main/aidl/com/slipkprojects/ultrasshservice/aidl/IUltraSSHServiceInternal.aidl || true
 
-      - name: Restore Layouts
-        run: |
-          FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD)
-          git checkout "$FIRST_COMMIT" -- app/src/main/res/layout/activity_main.xml app/src/main/res/layout/activity_main_drawer.xml || true
 
       - name: Build APK
         run: |
