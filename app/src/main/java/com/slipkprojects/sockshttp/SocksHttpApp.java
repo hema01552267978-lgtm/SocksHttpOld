@@ -48,9 +48,9 @@ public class SocksHttpApp extends Application {
     /** Called only after the native launcher has successfully opened the main activity. */
     public static synchronized void initializeComponents(Context context) {
         if (componentsInitialized) return;
-        componentsInitialized = true;
         runStartupStep(context, "SocksHttpCore.init", () -> SocksHttpCore.init(context.getApplicationContext()));
         runStartupStep(context, "SkProtect.init", () -> SkProtect.init(context.getApplicationContext()));
+        componentsInitialized = true;
     }
 
     @Override protected void attachBaseContext(Context base) { super.attachBaseContext(base); }
@@ -96,6 +96,7 @@ public class SocksHttpApp extends Application {
             } catch (Throwable ignored) { }
             markStartupStage(context, "APPLICATION_ERROR: " + step);
             Log.e(TAG, "Startup step failed: " + step, error);
+            throw new IllegalStateException("Startup initialization failed at " + step, error);
         }
     }
 
