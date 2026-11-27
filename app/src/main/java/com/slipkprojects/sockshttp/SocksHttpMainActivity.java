@@ -858,23 +858,27 @@ public class SocksHttpMainActivity extends BaseActivity
 	{
 		super.onPause();
 		
-		doSaveData();
-		
+		// onPause may run after a partial onCreate failure; guard fields that
+		// are assigned only after AppCompat and settings initialization.
+		if (mConfig != null) doSaveData();
 		SkStatus.removeStateListener(this);
-		mHandler.removeCallbacks(statsUpdater);
+		if (mHandler != null) mHandler.removeCallbacks(statsUpdater);
 		
 	}
 
 	@Override
 	protected void onDestroy()
 	{
+		// A failed/partial onCreate can leave these members uninitialized.
+		if (mHandler != null) mHandler.removeCallbacks(statsUpdater);
+		if (mDrawer != null) mDrawer.onDestroy();
+		try {
+			LocalBroadcastManager.getInstance(this)
+				.unregisterReceiver(mActivityReceiver);
+		} catch (IllegalArgumentException ignored) {
+			// Receiver was never registered because startup did not reach that step.
+		}
 		super.onDestroy();
-		
-		mDrawer.onDestroy();
-
-		LocalBroadcastManager.getInstance(this)
-			.unregisterReceiver(mActivityReceiver);
-			
 	}
 
 
