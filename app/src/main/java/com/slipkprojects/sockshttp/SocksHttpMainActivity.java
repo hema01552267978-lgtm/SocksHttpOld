@@ -1,6 +1,7 @@
 package com.slipkprojects.sockshttp;
 
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.AppCompatDelegate;
 import android.os.Bundle;
 import com.slipkprojects.sockshttp.R;
 import android.support.v7.widget.Toolbar;
@@ -774,6 +775,12 @@ public class SocksHttpMainActivity extends BaseActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main_menu, menu);
+        MenuItem nightItem = menu.findItem(R.id.miNightMode);
+        if (nightItem != null) {
+            boolean nightEnabled = "on".equals(mConfig.getModoNoturno());
+            nightItem.setChecked(nightEnabled);
+            nightItem.setTitle(nightEnabled ? "إيقاف الوضع الليلي" : "تفعيل الوضع الليلي");
+        }
         return true;
     }
 
