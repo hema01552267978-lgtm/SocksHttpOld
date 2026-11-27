@@ -34,7 +34,7 @@ public class LauncherActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        File stageFile = new File(getFilesDir(), "startup_stage.txt");
+        File stageFile = new File(getFilesDir(), "previous_startup_stage.txt");
         String previousStage = null;
         try {
             if (stageFile.exists()) {
@@ -42,8 +42,9 @@ public class LauncherActivity extends AppCompatActivity {
             }
         } catch (Exception ignored) {
         }
+        stageFile.delete();
 
-        // Record entry before AppCompat setup so a failure here is visible next launch.
+        // Record launcher entry before AppCompat setup.
         SocksHttpApp.markStartupStage(this, "LAUNCHER: onCreate entered");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash_screen);
