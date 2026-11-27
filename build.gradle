@@ -12,9 +12,6 @@ buildscript {
 }
 
 allprojects {
-    configurations.configureEach {
-        resolutionStrategy.force 'androidx.core:core:1.1.0'
-    }
     repositories {
         google()
         maven {
