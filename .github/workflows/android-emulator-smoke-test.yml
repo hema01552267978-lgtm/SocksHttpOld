@@ -11,7 +11,7 @@ permissions:
 jobs:
   build-and-smoke-test:
     name: Build and launch on Android 36
-    runs-on: macos-14
+    runs-on: macos-15-intel
     timeout-minutes: 35
 
     steps:
