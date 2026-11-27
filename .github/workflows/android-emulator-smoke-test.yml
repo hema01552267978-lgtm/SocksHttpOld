@@ -77,7 +77,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: emulator-log-API-${{ matrix.api-level }}
-          path: emulator-logcat.txt
+          path: |
+            emulator-logcat.txt
+            startup-stage.txt
           if-no-files-found: ignore
 
       - name: Publish APK only after startup test passes
