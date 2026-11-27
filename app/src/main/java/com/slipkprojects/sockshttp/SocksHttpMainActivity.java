@@ -842,14 +842,17 @@ public class SocksHttpMainActivity extends BaseActivity
     public void onResume() {
         super.onResume();
 
-		mDrawer.onResume();
+		// Startup can fail before the drawer and handler are initialized.
+		if (mDrawer != null) mDrawer.onResume();
 		
 		//doSaveData();
 		//doUpdateLayout();
 		
 		SkStatus.addStateListener(this);
-		mHandler.removeCallbacks(statsUpdater);
-		mHandler.post(statsUpdater);
+		if (mHandler != null) {
+			mHandler.removeCallbacks(statsUpdater);
+			mHandler.post(statsUpdater);
+		}
 		
     }
 
