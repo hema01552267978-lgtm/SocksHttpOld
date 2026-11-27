@@ -50,6 +50,7 @@ import android.content.ActivityNotFoundException;
 import android.app.Activity;
 import com.slipkprojects.ultrasshservice.logger.ConnectionStatus;
 import android.os.Handler;
+import android.net.TrafficStats;
 import android.support.v4.content.ContextCompat;
 import com.slipkprojects.sockshttp.fragments.ClearConfigDialogFragment;
 import com.slipkprojects.sockshttp.activities.ConfigExportFileActivity;
@@ -126,6 +127,19 @@ public class SocksHttpMainActivity extends BaseActivity
 	private TextView configMsgText;
 
 	private AdView adsBannerView;
+	private TextView vpnElapsedText;
+	private TextView vpnSpeedText;
+	private long vpnConnectedSince = 0L;
+	private long lastRxBytes = -1L;
+	private long lastTxBytes = -1L;
+	private long lastSpeedSampleTime = 0L;
+	private boolean vpnIsConnected = false;
+	private final Runnable statsUpdater = new Runnable() {
+		@Override public void run() {
+			updateConnectionStats();
+			if (mHandler != null) mHandler.postDelayed(this, 1000);
+		}
+	};
 
 	@Override
     protected void onCreate(@Nullable Bundle savedInstanceState)
@@ -257,6 +271,12 @@ public class SocksHttpMainActivity extends BaseActivity
 		customPayloadSwitch = (SwitchCompat) findViewById(R.id.activity_mainCustomPayloadSwitch);
 
 		starterButton.setOnClickListener(this);
+
+		vpnElapsedText = (TextView) findViewById(R.id.vpn_elapsed_time);
+		vpnSpeedText = (TextView) findViewById(R.id.vpn_network_speed);
+		SharedPreferences statsPrefs = getSharedPreferences("connection_stats", MODE_PRIVATE);
+		vpnConnectedSince = statsPrefs.getLong("connected_since", 0L);
+		vpnIsConnected = SkStatus.SSH_CONECTADO.equals(SkStatus.getLastState()) && vpnConnectedSince > 0L;
 		proxyInputLayout.setOnClickListener(this);
 
 		payloadLayout = (LinearLayout) findViewById(R.id.activity_mainInputPayloadLinearLayout);
@@ -291,6 +311,41 @@ public class SocksHttpMainActivity extends BaseActivity
         });
 	}
 	
+	private void updateConnectionStats() {
+		if (vpnElapsedText == null || vpnSpeedText == null) return;
+		if (vpnIsConnected && vpnConnectedSince > 0L) {
+			long elapsed = Math.max(0L, (System.currentTimeMillis() - vpnConnectedSince) / 1000L);
+			long hours = elapsed / 3600L;
+			long minutes = (elapsed % 3600L) / 60L;
+			long seconds = elapsed % 60L;
+			vpnElapsedText.setText(String.format(java.util.Locale.US, "مدة الاتصال: %02d:%02d:%02d", hours, minutes, seconds));
+		} else {
+			vpnElapsedText.setText("مدة الاتصال: غير متصل");
+		}
+		long now = System.currentTimeMillis();
+		long rx = TrafficStats.getTotalRxBytes();
+		long tx = TrafficStats.getTotalTxBytes();
+		if (lastSpeedSampleTime > 0L && rx >= 0L && tx >= 0L) {
+			long delta = Math.max(1L, now - lastSpeedSampleTime);
+			long down = lastRxBytes < 0L ? 0L : Math.max(0L, (rx - lastRxBytes) * 1000L / delta);
+			long up = lastTxBytes < 0L ? 0L : Math.max(0L, (tx - lastTxBytes) * 1000L / delta);
+			vpnSpeedText.setText("سرعة الجهاز: تنزيل " + formatRate(down) + " | رفع " + formatRate(up));
+		} else {
+			vpnSpeedText.setText("سرعة الجهاز: جارٍ القياس...");
+		}
+		lastRxBytes = rx;
+		lastTxBytes = tx;
+		lastSpeedSampleTime = now;
+	}
+
+	private String formatRate(long bytesPerSecond) {
+		if (bytesPerSecond >= 1024L * 1024L)
+			return String.format(java.util.Locale.US, "%.2f MB/s", bytesPerSecond / (1024.0 * 1024.0));
+		if (bytesPerSecond >= 1024L)
+			return String.format(java.util.Locale.US, "%.1f KB/s", bytesPerSecond / 1024.0);
+		return bytesPerSecond + " B/s";
+	}
+
 	private void doUpdateLayout() {
 		SharedPreferences prefs = mConfig.getPrefsPrivate();
 
@@ -644,6 +699,19 @@ public class SocksHttpMainActivity extends BaseActivity
 			}
 		});
 		
+		if (SkStatus.SSH_CONECTADO.equals(state)) {
+			if (!vpnIsConnected) {
+				vpnConnectedSince = System.currentTimeMillis();
+				getSharedPreferences("connection_stats", MODE_PRIVATE).edit().putLong("connected_since", vpnConnectedSince).apply();
+			}
+			vpnIsConnected = true;
+		} else if (SkStatus.SSH_DESCONECTADO.equals(state)) {
+			vpnIsConnected = false;
+			vpnConnectedSince = 0L;
+			getSharedPreferences("connection_stats", MODE_PRIVATE).edit().remove("connected_since").apply();
+		}
+		if (mHandler != null) mHandler.post(statsUpdater);
+
 		switch (state) {
 			case SkStatus.SSH_CONECTADO:
 				// carrega ads banner
@@ -806,6 +874,8 @@ public class SocksHttpMainActivity extends BaseActivity
 		//doUpdateLayout();
 		
 		SkStatus.addStateListener(this);
+		mHandler.removeCallbacks(statsUpdater);
+		mHandler.post(statsUpdater);
 		
 		if (adsBannerView != null) {
 			adsBannerView.resume();
@@ -820,6 +890,7 @@ public class SocksHttpMainActivity extends BaseActivity
 		doSaveData();
 		
 		SkStatus.removeStateListener(this);
+		mHandler.removeCallbacks(statsUpdater);
 		
 		if (adsBannerView != null) {
 			adsBannerView.pause();
