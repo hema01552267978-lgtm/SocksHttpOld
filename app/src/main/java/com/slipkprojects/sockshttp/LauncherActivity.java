@@ -43,11 +43,11 @@ public class LauncherActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash_screen);
 
-        if (previousStage != null && !previousStage.contains("MAIN_READY")) {
+        if (previousStage != null && !previousStage.trim().isEmpty()) {
             final String diagnostic = previousStage;
             new AlertDialog.Builder(this)
                 .setTitle("تشخيص توقف التطبيق")
-                .setMessage("آخر مرحلة وصل لها التطبيق قبل الإغلاق:\n\n" + diagnostic)
+                .setMessage("آخر مرحلة محفوظة من تشغيل التطبيق السابق:\n\n" + diagnostic)
                 .setCancelable(false)
                 .setPositiveButton("نسخ التشخيص وفتح التطبيق", (dialog, which) -> {
                     ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
