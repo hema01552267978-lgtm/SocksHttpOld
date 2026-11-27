@@ -34,7 +34,7 @@ jobs:
           root = Path("build.gradle")
           if root.exists():
               text = root.read_text()
-              text = re.sub(r'com\.android\.tools\.build:gradle:[0-9.]+', 'com.android.tools.build:gradle:8.5.2', text)
+              text = re.sub(r'com\.android\.tools\.build:gradle:[0-9.]+', 'com.android.tools.build:gradle:8.6.1', text)
               root.write_text(text)
           PY
 
