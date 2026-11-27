@@ -103,8 +103,13 @@ implements ProxyData
 			out.flush();
 		}
 
-		// suporta Dropbear (SSH + PAYLOAD)
+		// SSH direto com payload continua usando o fluxo Dropbear legado.
+		// Para HTTP WebSocket, primeiro consome o 101 e seus headers; o stream
+		// fica posicionado no banner SSH que vem depois do upgrade.
 		if (modoDropbear) {
+			if (WebSocketHandshake.isUpgradeRequest(requestPayload)) {
+				WebSocketHandshake.consumeUpgradeResponse(sock.getInputStream());
+			}
 			return sock;
 		}
 
