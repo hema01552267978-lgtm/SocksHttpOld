@@ -232,7 +232,7 @@ public class SocksHttpMainActivity extends BaseActivity
 			//adsBannerView.setAdUnitId(SocksHttpApp.ADS_UNITID_BANNER_MAIN);
 		}
 		
-		if (TunnelUtils.isNetworkOnline(SocksHttpMainActivity.this)) {
+		if (adsBannerView != null && TunnelUtils.isNetworkOnline(SocksHttpMainActivity.this)) {
 			adsBannerView.setAdListener(new AdListener() {
 				@Override
 				public void onAdLoaded() {
@@ -303,14 +303,16 @@ public class SocksHttpMainActivity extends BaseActivity
 		inputPwShowPass.setOnClickListener(this);
 
         Button developerContactButton = (Button) findViewById(R.id.btn_wa_dev);
-        developerContactButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent contactIntent = new Intent(Intent.ACTION_VIEW,
-                    Uri.parse("https://wa.me/201552267978"));
-                startActivity(contactIntent);
-            }
-        });
+        if (developerContactButton != null) {
+            developerContactButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent contactIntent = new Intent(Intent.ACTION_VIEW,
+                        Uri.parse("https://wa.me/201552267978"));
+                    startActivity(contactIntent);
+                }
+            });
+        }
 	}
 	
 	private void updateConnectionStats() {
