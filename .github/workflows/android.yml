@@ -1,4 +1,4 @@
-name: Android CI # Native launcher diagnostics build
+name: Android CI # Native theme startup diagnostics
 on:
   push:
     branches: [ main, master, fix-bcrypt-build ]
