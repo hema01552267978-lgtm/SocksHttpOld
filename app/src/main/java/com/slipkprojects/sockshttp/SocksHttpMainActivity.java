@@ -145,8 +145,9 @@ public class SocksHttpMainActivity extends BaseActivity
 	@Override
     protected void onCreate(@Nullable Bundle savedInstanceState)
     {
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         super.onCreate(savedInstanceState);
+        // BaseActivity applies the saved local night mode after AppCompat initialization.
+        // Do not change the global AppCompat mode before the Activity is attached.
 
 		SocksHttpApp.markStartupStage(this, "MAIN: onCreate entered");
 		mHandler = new Handler();
