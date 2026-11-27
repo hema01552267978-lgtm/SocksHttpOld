@@ -23,6 +23,35 @@ public class LauncherActivity extends BaseActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_splash_screen);
+        
+        final File crashFile = new File(getFilesDir(), "last_crash.txt");
+        if (crashFile.exists()) {
+            try {
+                FileInputStream input = new FileInputStream(crashFile);
+                ByteArrayOutputStream output = new ByteArrayOutputStream();
+                byte[] buffer = new byte[2048];
+                int count;
+                while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+                input.close();
+                final String crashText = output.toString("UTF-8");
+                new AlertDialog.Builder(this)
+                    .setTitle("تم تسجيل خطأ في التشغيل")
+                    .setMessage(crashText)
+                    .setCancelable(false)
+                    .setPositiveButton("نسخ الخطأ", (dialog, which) -> {
+                        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                        clipboard.setPrimaryClip(ClipData.newPlainText("Crash log", crashText));
+                        crashFile.delete();
+                        startMainScreen();
+                    })
+                    .setNegativeButton("متابعة بدون نسخ", (dialog, which) -> {
+                        crashFile.delete();
+                        startMainScreen();
+                    })
+                    .show();
+                return;
+            } catch (Exception ignored) { crashFile.delete(); }
+        }
 		
 		// inicia atividade principal
         startMainScreen();
