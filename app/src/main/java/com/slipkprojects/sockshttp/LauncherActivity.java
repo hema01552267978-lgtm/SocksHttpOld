@@ -7,18 +7,12 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import com.slipkprojects.sockshttp.preference.LocaleHelper;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 
 public class LauncherActivity extends AppCompatActivity {
-
-    @Override
-    protected void attachBaseContext(Context base) {
-        super.attachBaseContext(LocaleHelper.setLocale(base));
-    }
 
     private String readText(File file) throws Exception {
         FileInputStream input = new FileInputStream(file);
