@@ -213,7 +213,7 @@
 					android:layout_height="wrap_content"
 					android:layout_marginLeft="20dp"
 					android:layout_marginRight="20dp"
-					android:background="@drawable/button_blue"
+					android:background="@drawable/button_red"
 					android:textColor="#FFFFFF"
 					android:textStyle="bold"
 					android:text="@string/start"
@@ -229,7 +229,7 @@
 			android:layout_width="match_parent"
 			android:orientation="vertical"
 			android:layout_marginTop="3dp"
-			android:background="@drawable/my_photo"
+			android:background="@drawable/panel_glass"
 			android:padding="10dp">
 
 			<android.support.design.widget.TextInputLayout
@@ -254,7 +254,7 @@
 			android:layout_height="wrap_content"
 			android:layout_width="match_parent"
 			android:orientation="vertical"
-			android:background="@drawable/my_photo"
+			android:background="@drawable/panel_glass"
 			android:gravity="center"
 			android:padding="5dp"
 			android:layout_marginTop="3dp">
