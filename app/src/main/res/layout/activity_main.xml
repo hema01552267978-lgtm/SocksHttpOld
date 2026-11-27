@@ -7,11 +7,6 @@
 	android:layout_height="match_parent" android:background="@drawable/my_photo">
 
 	<LinearLayout
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="#CC000000" android:padding="8dp" android:gravity="center">
-            <TextView android:id="@+id/tv_marquee" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🔥 مرحباً بكم في تطبيق ✹⃝𝑰🇵🇸⃝𝑬𝑳M𝑨𝑳oo3n✯ الرسمي لتشغيل الكونفجات والإنترنت المجاني السريع 🔥" android:textColor="#FF1744" android:textSize="16sp" android:textStyle="bold" android:singleLine="true" android:ellipsize="marquee" android:marqueeRepeatLimit="marquee_forever" android:focusable="true" android:focusableInTouchMode="true"/>
-            <Button android:id="@+id/btn_wa_dev" android:layout_width="match_parent" android:layout_height="40dp" android:layout_marginTop="6dp" android:text="تواصل مع المطور واتساب (01552267978)" android:backgroundTint="#25D366" android:textColor="#FFFFFF"/>
-        </LinearLayout>
-    
 		android:id="@+id/activity_mainLinearLayout"
 		android:focusable="true"
 		android:focusableInTouchMode="true"
@@ -19,6 +14,36 @@
 		android:layout_height="fill_parent"
 		android:paddingBottom="80dp"
 		android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#CC000000"
+            android:padding="8dp"
+            android:gravity="center">
+            <TextView
+                android:id="@+id/tv_marquee"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🔥 مرحباً بكم في تطبيق ✹⃝𝑰🇵🇸⃝𝑬𝑳M𝑨𝑳oo3n✯ الرسمي 🔥"
+                android:textColor="#FF1744"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:singleLine="true"
+                android:ellipsize="marquee"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:focusable="true"
+                android:focusableInTouchMode="true"/>
+            <Button
+                android:id="@+id/btn_wa_dev"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginTop="6dp"
+                android:text="تواصل مع المطور واتساب (01552267978)"
+                android:backgroundTint="#25D366"
+                android:textColor="#FFFFFF"/>
+        </LinearLayout>
 
 		<LinearLayout
 			android:layout_height="wrap_content"
