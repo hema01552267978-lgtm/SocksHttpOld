@@ -1,67 +1,65 @@
 package com.slipkprojects.sockshttp;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
+import android.view.Gravity;
+import android.widget.TextView;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 
-public class LauncherActivity extends AppCompatActivity {
+/**
+ * Minimal platform launcher kept independent from AppCompat so startup
+ * diagnostics can still be displayed if the legacy support library fails.
+ */
+public class LauncherActivity extends Activity {
 
     private String readText(File file) throws Exception {
         FileInputStream input = new FileInputStream(file);
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         byte[] buffer = new byte[2048];
         int count;
-        while ((count = input.read(buffer)) != -1) {
-            output.write(buffer, 0, count);
+        try {
+            while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+            return output.toString("UTF-8");
+        } finally {
+            input.close();
         }
-        input.close();
-        return output.toString("UTF-8");
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        TextView splash = new TextView(this);
+        splash.setText("ELMALOO3N VPN");
+        splash.setTextColor(Color.WHITE);
+        splash.setTextSize(25);
+        splash.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        splash.setGravity(Gravity.CENTER);
+        splash.setBackgroundColor(Color.rgb(8, 3, 5));
+        setContentView(splash);
+
         File stageFile = new File(getFilesDir(), "previous_startup_stage.txt");
         String previousStage = null;
         try {
-            if (stageFile.exists()) {
-                previousStage = readText(stageFile);
-            }
-        } catch (Exception ignored) {
-        }
+            if (stageFile.exists()) previousStage = readText(stageFile);
+        } catch (Exception ignored) { }
         stageFile.delete();
 
-        // Record launcher entry before AppCompat setup.
-        SocksHttpApp.markStartupStage(this, "LAUNCHER: onCreate entered");
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_splash_screen);
+        SocksHttpApp.markStartupStage(this, "LAUNCHER: native Activity created");
 
         if (previousStage != null && !previousStage.trim().isEmpty()) {
-            final String diagnostic = previousStage;
-            new AlertDialog.Builder(this)
-                .setTitle("تشخيص توقف التطبيق")
-                .setMessage("آخر مرحلة محفوظة من تشغيل التطبيق السابق:\n\n" + diagnostic)
-                .setCancelable(false)
-                .setPositiveButton("نسخ التشخيص وفتح التطبيق", (dialog, which) -> {
-                    ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                    if (clipboard != null) {
-                        clipboard.setPrimaryClip(ClipData.newPlainText("Startup diagnostic", diagnostic));
-                    }
-                    stageFile.delete();
-                    startMainScreen();
-                })
-                .setNegativeButton("فتح التطبيق", (dialog, which) -> {
-                    stageFile.delete();
-                    startMainScreen();
-                })
-                .show();
+            showDiagnostic("تشخيص توقف التطبيق",
+                "آخر مرحلة محفوظة من التشغيل السابق:\n\n" + previousStage,
+                "نسخ التشخيص وفتح التطبيق", previousStage);
             return;
         }
 
@@ -69,23 +67,8 @@ public class LauncherActivity extends AppCompatActivity {
         if (crashFile.exists()) {
             try {
                 final String crashText = readText(crashFile);
-                new AlertDialog.Builder(this)
-                    .setTitle("تم تسجيل خطأ في التشغيل")
-                    .setMessage(crashText)
-                    .setCancelable(false)
-                    .setPositiveButton("نسخ الخطأ", (dialog, which) -> {
-                        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                        if (clipboard != null) {
-                            clipboard.setPrimaryClip(ClipData.newPlainText("Crash log", crashText));
-                        }
-                        crashFile.delete();
-                        startMainScreen();
-                    })
-                    .setNegativeButton("متابعة بدون نسخ", (dialog, which) -> {
-                        crashFile.delete();
-                        startMainScreen();
-                    })
-                    .show();
+                showDiagnostic("تم تسجيل خطأ في التشغيل", crashText,
+                    "نسخ الخطأ وفتح التطبيق", crashText);
                 return;
             } catch (Exception ignored) {
                 crashFile.delete();
@@ -95,10 +78,30 @@ public class LauncherActivity extends AppCompatActivity {
         startMainScreen();
     }
 
+    private void showDiagnostic(String title, String message, String button, final String copyText) {
+        new AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(message)
+            .setCancelable(false)
+            .setPositiveButton(button, (dialog, which) -> {
+                ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                if (clipboard != null) {
+                    clipboard.setPrimaryClip(ClipData.newPlainText("ELMALOO3N VPN diagnostic", copyText));
+                }
+                new File(getFilesDir(), "last_crash.txt").delete();
+                new File(getFilesDir(), "previous_startup_stage.txt").delete();
+                startMainScreen();
+            })
+            .setNegativeButton("فتح التطبيق بدون نسخ", (dialog, which) -> {
+                new File(getFilesDir(), "last_crash.txt").delete();
+                new File(getFilesDir(), "previous_startup_stage.txt").delete();
+                startMainScreen();
+            })
+            .show();
+    }
+
     private void startMainScreen() {
-        Intent intent = new Intent(this, SocksHttpMainActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-        startActivity(intent);
+        startActivity(new Intent(this, SocksHttpMainActivity.class));
         finish();
     }
 }
