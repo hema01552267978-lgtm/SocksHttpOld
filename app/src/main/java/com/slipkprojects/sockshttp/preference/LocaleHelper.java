@@ -16,13 +16,14 @@ import com.slipkprojects.ultrasshservice.config.Settings;
 public class LocaleHelper {
 
 	@Retention(RetentionPolicy.SOURCE)
-	@StringDef({ DEFAULT, PORTUGUES_BR, SPANISH })
+	@StringDef({ DEFAULT, ARABIC, PORTUGUES_BR, SPANISH })
 	public @interface LocaleDef {
-		String[] SUPPORTED_LOCALES = { DEFAULT, PORTUGUES_BR, SPANISH };
+		String[] SUPPORTED_LOCALES = { DEFAULT, ARABIC, PORTUGUES_BR, SPANISH };
 	}
 
 	//static final String ENGLISH = "en";
 	static final String DEFAULT = "default";
+	static final String ARABIC = "ar";
 	static final String PORTUGUES_BR = "pt-BR";
 	static final String SPANISH = "es";
 
