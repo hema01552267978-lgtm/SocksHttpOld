@@ -90,9 +90,9 @@
 				android:id="@+id/activity_mainAutorText"
 				android:layout_height="wrap_content"
 				android:layout_width="wrap_content"
-				android:text="Elmaloo3n VPN"
+				android:text="✹ ELMALOO3N VPN ✹"
 				android:textStyle="bold"
-				android:textColor="#00BAFF"/>
+				android:textColor="#FF263F"/>
 
 		</LinearLayout>
 
