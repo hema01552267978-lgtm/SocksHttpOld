@@ -11,7 +11,7 @@ permissions:
 jobs:
   build-and-smoke-test:
     name: Build and launch on Android ${{ matrix.api-level }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -41,7 +41,7 @@ jobs:
           arch: x86_64
           target: google_apis
           profile: pixel_2
-          emulator-options: -no-window -no-audio -no-boot-anim
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot -wipe-data -memory 2048
           disable-animations: true
           script: |
             set -eu
