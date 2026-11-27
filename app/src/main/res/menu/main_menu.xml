@@ -9,6 +9,11 @@
     </item>
 	
 	<item
+        android:id="@+id/miNightMode"
+        android:checkable="true"
+        android:title="الوضع الليلي" />
+	
+	<item
         android:id="@+id/miSetting"
         android:title="@string/settings_ImportExport">
 		<menu>
