@@ -127,6 +127,7 @@ public class SocksHttpMainActivity extends BaseActivity
 	private TextView vpnElapsedText;
 	private TextView vpnSpeedText;
 	private TextView configExpiryText;
+	private TextView connectionStatusText;
 	private long vpnConnectedSince = 0L;
 	private long lastRxBytes = -1L;
 	private long lastTxBytes = -1L;
@@ -266,6 +267,7 @@ public class SocksHttpMainActivity extends BaseActivity
 		vpnElapsedText = (TextView) findViewById(R.id.vpn_elapsed_time);
 		vpnSpeedText = (TextView) findViewById(R.id.vpn_network_speed);
 		configExpiryText = (TextView) findViewById(R.id.config_expiry_time);
+		connectionStatusText = (TextView) findViewById(R.id.activity_connection_status);
 		SharedPreferences statsPrefs = getSharedPreferences("connection_stats", MODE_PRIVATE);
 		vpnConnectedSince = statsPrefs.getLong("connected_since", 0L);
 		vpnIsConnected = SkStatus.SSH_CONECTADO.equals(SkStatus.getLastState()) && vpnConnectedSince > 0L;
@@ -308,6 +310,22 @@ public class SocksHttpMainActivity extends BaseActivity
 	private void updateConnectionStats() {
 		if (vpnElapsedText == null || vpnSpeedText == null) return;
 		updateConfigExpiryCountdown();
+		if (connectionStatusText != null) {
+			String state = SkStatus.getLastState();
+			if (SkStatus.SSH_CONECTADO.equals(state) || SkStatus.isTunnelActive()) {
+				connectionStatusText.setText("متصل بالإنترنت");
+				connectionStatusText.setTextColor(0xFF69E58A);
+			} else if (SkStatus.SSH_INICIANDO.equals(state)) {
+				connectionStatusText.setText("جارٍ الاتصال...");
+				connectionStatusText.setTextColor(0xFFFFC66D);
+			} else if (SkStatus.SSH_PARANDO.equals(state)) {
+				connectionStatusText.setText("جارٍ فصل الاتصال...");
+				connectionStatusText.setTextColor(0xFFFFC66D);
+			} else {
+				connectionStatusText.setText("غير متصل - جاهز للاتصال");
+				connectionStatusText.setTextColor(0xFFFF7183);
+			}
+		}
 		if (vpnIsConnected && vpnConnectedSince > 0L) {
 			long elapsed = Math.max(0L, (System.currentTimeMillis() - vpnConnectedSince) / 1000L);
 			long hours = elapsed / 3600L;
