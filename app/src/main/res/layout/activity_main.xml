@@ -45,6 +45,40 @@
                 android:textColor="#FFFFFF"/>
         </LinearLayout>
 
+        <LinearLayout
+            android:id="@+id/connection_stats_panel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="6dp"
+            android:padding="12dp"
+            android:orientation="vertical"
+            android:background="#CC000000">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="إحصائيات الاتصال"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:gravity="center"/>
+            <TextView
+                android:id="@+id/vpn_elapsed_time"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="مدة الاتصال: 00:00:00"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp"
+                android:paddingTop="6dp"/>
+            <TextView
+                android:id="@+id/vpn_network_speed"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="سرعة الإنترنت: تنزيل 0 B/s | رفع 0 B/s"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp"
+                android:paddingTop="4dp"/>
+        </LinearLayout>
+
 		<LinearLayout
 			android:layout_height="wrap_content"
 			android:layout_width="match_parent"
