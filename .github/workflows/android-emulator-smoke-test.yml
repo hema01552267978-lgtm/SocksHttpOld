@@ -58,11 +58,19 @@ jobs:
               tail -n 250 emulator-logcat.txt
               exit 1
             fi
-            if grep -E "FATAL EXCEPTION|Process: ${PACKAGE}.*(died|has died)" emulator-logcat.txt; then
-              echo "FAIL: fatal app exception detected."
+            adb shell run-as "$PACKAGE" cat files/startup_stage.txt > startup-stage.txt
+            if ! grep -q "MAIN_READY: main screen initialized" startup-stage.txt; then
+              echo "FAIL: main screen did not reach MAIN_READY."
+              cat startup-stage.txt
+              tail -n 250 emulator-logcat.txt
               exit 1
             fi
-            echo "PASS: app process remained alive for 25 seconds on API ${{ matrix.api-level }}."
+            if grep -A 8 -B 2 "FATAL EXCEPTION" emulator-logcat.txt | grep -q "$PACKAGE"; then
+              echo "FAIL: fatal exception from the app detected."
+              tail -n 250 emulator-logcat.txt
+              exit 1
+            fi
+            echo "PASS: main screen reached MAIN_READY and stayed alive for 25 seconds on API ${{ matrix.api-level }}."
 
       - name: Upload emulator log
         if: always()
