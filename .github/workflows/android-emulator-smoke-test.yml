@@ -43,7 +43,8 @@ jobs:
           profile: pixel_2
           emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot -wipe-data
           disable-animations: true
-          disable-linux-kvm: false
+          disable-linux-hw-accel: false
+          emulator-boot-timeout: 600
           script: |
             set -eu
             APK="app/build/outputs/apk/debug/app-debug.apk"
