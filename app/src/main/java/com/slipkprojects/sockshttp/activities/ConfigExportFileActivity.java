@@ -2,6 +2,9 @@ package com.slipkprojects.sockshttp.activities;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.content.Intent;
+import android.net.Uri;
+import java.io.OutputStream;
 import com.slipkprojects.sockshttp.R;
 import android.support.v7.widget.Toolbar;
 import android.widget.TextView;
@@ -36,6 +39,8 @@ public class ConfigExportFileActivity
 		implements CompoundButton.OnCheckedChangeListener, View.OnClickListener
 {
 	private static final String TAG = ConfigExportFileActivity.class.getSimpleName();
+	private static final int REQUEST_CREATE_CONFIG = 3301;
+	private String pendingConfigName = "";
 	
 	private Settings mConfig;
 	
@@ -104,41 +109,20 @@ public class ConfigExportFileActivity
 	}
 	
 	
-	private void exportConfiguracao(String nome)
+
+	private void exportConfiguracao(OutputStream output)
 			throws IOException {
-		if (!FileUtils.isExternalStorageWritable()) {
-			throw new IOException(getString(R.string.error_permission_writer_required));
-		}
-		
-		File fileDir = new File(Environment.getExternalStorageDirectory(), "SocksHttp");
-		
-		if (!fileDir.exists()) {
-			fileDir.mkdir();
-		}
-		
-		File fileExport = new File(fileDir, String.format("%s.%s", nome, ConfigParser.FILE_EXTENSAO));
-		if (!fileExport.exists()) {
-			try {
-				fileExport.createNewFile();
-			} catch(IOException e) {
-				throw new IOException(getString(R.string.error_save_settings));
-			}
-		}
-		
-		// salva mensagem para ser reutilizada
 		if (mIsProteger) {
 			mConfig.setMensagemConfigExportar(mMensagem);
 		}
-		
 		try {
-			ConfigParser.convertDataToFile(new FileOutputStream(fileExport), this,
+			ConfigParser.convertDataToFile(output, this,
 				mIsProteger, mPedirSenha, mBloquearRoot, mMensagem, mValidade);
-		} catch(IOException e) {
-			fileExport.delete();
-			throw e;
+		} finally {
+			try { output.close(); } catch (IOException ignored) {}
 		}
 	}
-	
+
 	
 	/**
 	* Validade
@@ -232,7 +216,7 @@ public class ConfigExportFileActivity
 	}
 	
 	private void requestPermissions() {
-		FileUtils.requestForPermissionExternalStorage(this);
+		// Android's system document picker grants access only to the chosen file.
 	}
 	
 	
@@ -322,22 +306,37 @@ public class ConfigExportFileActivity
 					mValidade = 0;
 				}
 
+				pendingConfigName = nomeConfig.trim();
+				Intent create = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+				create.addCategory(Intent.CATEGORY_OPENABLE);
+				create.setType("application/octet-stream");
+				create.putExtra(Intent.EXTRA_TITLE, pendingConfigName + "." + ConfigParser.FILE_EXTENSAO);
 				try {
-					exportConfiguracao(nomeConfig);
-
-					Toast.makeText(ConfigExportFileActivity.this, R.string.success_export_settings, Toast.LENGTH_SHORT)
-						.show();
-				} catch(IOException e) {
-					Toast.makeText(ConfigExportFileActivity.this, R.string.error_export_settings, Toast.LENGTH_SHORT)
-						.show();
-
-					Toast.makeText(ConfigExportFileActivity.this, e.getMessage(), Toast.LENGTH_SHORT)
-						.show();
+					startActivityForResult(create, REQUEST_CREATE_CONFIG);
+				} catch (Exception e) {
+					Toast.makeText(this, "تعذر فتح نافذة حفظ الملف", Toast.LENGTH_LONG).show();
 				}
-
-				onBackPressed();
 			break;
 		}
 	}
 	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if (requestCode != REQUEST_CREATE_CONFIG) return;
+		if (resultCode != RESULT_OK || data == null || data.getData() == null) return;
+		Uri uri = data.getData();
+		OutputStream output = null;
+		try {
+			output = getContentResolver().openOutputStream(uri, "w");
+			if (output == null) throw new IOException("تعذر إنشاء الملف");
+			exportConfiguracao(output);
+			Toast.makeText(this, "تم حفظ الكونفيج بنجاح", Toast.LENGTH_LONG).show();
+			finish();
+		} catch (Exception e) {
+			if (output != null) try { output.close(); } catch (IOException ignored) {}
+			Toast.makeText(this, "فشل حفظ الكونفيج: " + e.getMessage(), Toast.LENGTH_LONG).show();
+		}
+	}
+
 }
