@@ -15,6 +15,8 @@ import com.slipkprojects.ultrasshservice.config.Settings;
 import android.util.Log;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import com.google.android.gms.ads.MobileAds;
 import android.content.res.Configuration;
@@ -40,6 +42,7 @@ public class SocksHttpApp extends Application
 	public void onCreate()
 	{
 		super.onCreate();
+		preservePreviousStartupStage();
 
 		// Save uncaught startup crashes so they can be shown on the next launch.
 		final Thread.UncaughtExceptionHandler previousHandler = Thread.getDefaultUncaughtExceptionHandler();
@@ -69,24 +72,11 @@ public class SocksHttpApp extends Application
             .withPerformanceMetrics(FlurryPerformance.ALL)
 			.build(this, APP_FLURRY_KEY);*/
 			
-		// inicia
-		markStartupStage(this, "APPLICATION: before SocksHttpCore.init");
-		SocksHttpCore.init(this);
-		markStartupStage(this, "APPLICATION: SocksHttpCore.init completed");
-		
-		// protege o app
-		markStartupStage(this, "APPLICATION: before SkProtect.init");
-		SkProtect.init(this);
-		markStartupStage(this, "APPLICATION: SkProtect.init completed");
-		
-		// Initialize the Mobile Ads SDK.
-        markStartupStage(this, "APPLICATION: before MobileAds.initialize");
-        MobileAds.initialize(this);
-        markStartupStage(this, "APPLICATION: MobileAds.initialize completed");
-		
-		// modo noturno
-		markStartupStage(this, "APPLICATION: before setModoNoturno");
-		setModoNoturno(this);
+		// Initialize components independently so a startup failure can be shown by the launcher.
+		runStartupStep("SocksHttpCore.init", () -> SocksHttpCore.init(this));
+		runStartupStep("SkProtect.init", () -> SkProtect.init(this));
+		runStartupStep("MobileAds.initialize", () -> MobileAds.initialize(this));
+		runStartupStep("setModoNoturno", () -> setModoNoturno(this));
 		markStartupStage(this, "APPLICATION: completed");
 	}
 	
@@ -110,6 +100,46 @@ public class SocksHttpApp extends Application
 		AppCompatDelegate.setDefaultNightMode(night_mode);
 	}
 	
+	private void preservePreviousStartupStage() {
+		File current = new File(getFilesDir(), "startup_stage.txt");
+		File previous = new File(getFilesDir(), "previous_startup_stage.txt");
+		if (!current.exists()) {
+			previous.delete();
+			return;
+		}
+		try {
+			FileInputStream input = new FileInputStream(current);
+			FileOutputStream output = new FileOutputStream(previous, false);
+			byte[] buffer = new byte[1024];
+			int count;
+			while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+			input.close();
+			output.close();
+		} catch (Throwable error) {
+			Log.e(TAG, "Could not preserve previous startup stage", error);
+		}
+	}
+
+	private void runStartupStep(String step, Runnable action) {
+		markStartupStage(this, "APPLICATION: before " + step);
+		try {
+			action.run();
+			markStartupStage(this, "APPLICATION: " + step + " completed");
+		} catch (Throwable error) {
+			try {
+				File crashFile = new File(getFilesDir(), "last_crash.txt");
+				PrintWriter writer = new PrintWriter(new FileWriter(crashFile, false));
+				writer.println("ELMALOO3N VPN startup error: " + step);
+				writer.println("Android SDK: " + Build.VERSION.SDK_INT);
+				writer.println("Device: " + Build.MANUFACTURER + " " + Build.MODEL);
+				error.printStackTrace(writer);
+				writer.close();
+			} catch (Throwable ignored) { }
+			markStartupStage(this, "APPLICATION_ERROR: " + step);
+			Log.e(TAG, "Startup step failed: " + step, error);
+		}
+	}
+
 	public static void markStartupStage(Context context, String stage) {
 		try {
 			File stageFile = new File(context.getFilesDir(), "startup_stage.txt");
