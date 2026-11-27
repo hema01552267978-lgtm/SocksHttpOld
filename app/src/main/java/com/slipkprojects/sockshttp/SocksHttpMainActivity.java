@@ -148,7 +148,9 @@ public class SocksHttpMainActivity extends BaseActivity
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         super.onCreate(savedInstanceState);
 
+		SocksHttpApp.markStartupStage(this, "MAIN: onCreate entered");
 		mHandler = new Handler();
+		SocksHttpApp.markStartupStage(this, "MAIN: before Settings and drawer initialization");
 		mConfig = new Settings(this);
 		mDrawer = new DrawerLog(this);
 		mDrawerPanel = new DrawerPanelMain(this);
@@ -158,6 +160,7 @@ public class SocksHttpMainActivity extends BaseActivity
 		boolean showFirstTime = prefs.getBoolean("connect_first_time", true);
 		int lastVersion = prefs.getInt("last_version", 0);
 
+		SocksHttpApp.markStartupStage(this, "MAIN: preferences loaded");
 		// se primeira vez
 		if (showFirstTime)
         {
@@ -193,21 +196,29 @@ public class SocksHttpMainActivity extends BaseActivity
 		} catch(IOException e) {}
 		
 		
+		SocksHttpApp.markStartupStage(this, "MAIN: before doLayout");
 		// set layout
 		doLayout();
+		SocksHttpApp.markStartupStage(this, "MAIN: doLayout completed");
 
 		// verifica se existe algum problema
+		SocksHttpApp.markStartupStage(this, "MAIN: before CharlieProtect");
 		SkProtect.CharlieProtect();
+		SocksHttpApp.markStartupStage(this, "MAIN: CharlieProtect completed");
 
 		// recebe local dados
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(UPDATE_VIEWS);
 		filter.addAction(OPEN_LOGS);
 		
+		SocksHttpApp.markStartupStage(this, "MAIN: before registerReceiver");
 		LocalBroadcastManager.getInstance(this)
 			.registerReceiver(mActivityReceiver, filter);
+		SocksHttpApp.markStartupStage(this, "MAIN: receiver registered");
 			
+		SocksHttpApp.markStartupStage(this, "MAIN: before doUpdateLayout");
 		doUpdateLayout();
+		SocksHttpApp.markStartupStage(this, "MAIN_READY: main screen initialized");
 	}
 
 
