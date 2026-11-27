@@ -21,12 +21,17 @@ public abstract class BaseActivity extends AppCompatActivity
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
+		com.slipkprojects.sockshttp.SocksHttpApp.markStartupStage(this, "BASE_ACTIVITY: before AppCompat onCreate");
 		super.onCreate(savedInstanceState);
+		com.slipkprojects.sockshttp.SocksHttpApp.markStartupStage(this, "BASE_ACTIVITY: AppCompat onCreate completed");
 		//setTheme(ThemeUtil.getThemeId(mTheme));
 		
+		com.slipkprojects.sockshttp.SocksHttpApp.markStartupStage(this, "BASE_ACTIVITY: before local night mode");
 		setModoNoturnoLocal();
+		com.slipkprojects.sockshttp.SocksHttpApp.markStartupStage(this, "BASE_ACTIVITY: local night mode completed");
 			
 		resetTitles();
+		com.slipkprojects.sockshttp.SocksHttpApp.markStartupStage(this, "BASE_ACTIVITY: titles reset completed");
 	}
 	
 	@Override
