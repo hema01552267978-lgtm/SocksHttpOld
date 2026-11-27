@@ -148,6 +148,16 @@
                 android:layout_marginBottom="8dp" />
 
             <TextView
+                android:id="@+id/config_expiry_time"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="صلاحية الكونفج: جارٍ الفحص..."
+                android:textColor="#FFFF7183"
+                android:textSize="14sp"
+                android:gravity="center"
+                android:paddingTop="8dp" />
+
+            <TextView
                 android:id="@+id/vpn_network_speed"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
