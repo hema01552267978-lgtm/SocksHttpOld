@@ -126,6 +126,7 @@ public class SocksHttpMainActivity extends BaseActivity
 
 	private TextView vpnElapsedText;
 	private TextView vpnSpeedText;
+	private TextView configExpiryText;
 	private long vpnConnectedSince = 0L;
 	private long lastRxBytes = -1L;
 	private long lastTxBytes = -1L;
@@ -264,6 +265,7 @@ public class SocksHttpMainActivity extends BaseActivity
 
 		vpnElapsedText = (TextView) findViewById(R.id.vpn_elapsed_time);
 		vpnSpeedText = (TextView) findViewById(R.id.vpn_network_speed);
+		configExpiryText = (TextView) findViewById(R.id.config_expiry_time);
 		SharedPreferences statsPrefs = getSharedPreferences("connection_stats", MODE_PRIVATE);
 		vpnConnectedSince = statsPrefs.getLong("connected_since", 0L);
 		vpnIsConnected = SkStatus.SSH_CONECTADO.equals(SkStatus.getLastState()) && vpnConnectedSince > 0L;
@@ -305,6 +307,7 @@ public class SocksHttpMainActivity extends BaseActivity
 	
 	private void updateConnectionStats() {
 		if (vpnElapsedText == null || vpnSpeedText == null) return;
+		updateConfigExpiryCountdown();
 		if (vpnIsConnected && vpnConnectedSince > 0L) {
 			long elapsed = Math.max(0L, (System.currentTimeMillis() - vpnConnectedSince) / 1000L);
 			long hours = elapsed / 3600L;
@@ -328,6 +331,27 @@ public class SocksHttpMainActivity extends BaseActivity
 		lastRxBytes = rx;
 		lastTxBytes = tx;
 		lastSpeedSampleTime = now;
+	}
+
+	private void updateConfigExpiryCountdown() {
+		if (configExpiryText == null || mConfig == null) return;
+		long expiry = mConfig.getPrefsPrivate().getLong(Settings.CONFIG_VALIDADE_KEY, 0L);
+		if (expiry <= 0L) {
+			configExpiryText.setText("صلاحية الكونفج: غير محددة");
+			return;
+		}
+		long remaining = expiry - System.currentTimeMillis();
+		if (remaining <= 0L) {
+			configExpiryText.setText("صلاحية الكونفج: منتهية");
+			return;
+		}
+		long totalSeconds = remaining / 1000L;
+		long days = totalSeconds / 86400L;
+		long hours = (totalSeconds % 86400L) / 3600L;
+		long minutes = (totalSeconds % 3600L) / 60L;
+		long seconds = totalSeconds % 60L;
+		configExpiryText.setText(String.format(java.util.Locale.US,
+			"الوقت المتبقي للكونفج: %d يوم %02d:%02d:%02d", days, hours, minutes, seconds));
 	}
 
 	private String formatRate(long bytesPerSecond) {
