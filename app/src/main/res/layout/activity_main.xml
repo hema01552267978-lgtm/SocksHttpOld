@@ -90,7 +90,7 @@
 				android:id="@+id/activity_mainAutorText"
 				android:layout_height="wrap_content"
 				android:layout_width="wrap_content"
-				android:text="Slipk Projects"
+				android:text="Elmaloo3n VPN"
 				android:textStyle="bold"
 				android:textColor="#00BAFF"/>
 
@@ -286,14 +286,14 @@
 					android:id="@+id/activity_mainSSHDirectRadioButton"
 					android:layout_height="wrap_content"
 					android:layout_width="wrap_content"
-					android:hint="SSH DIRECT"
+					android:text="اتصال مباشر"
 					android:padding="5dp"/>
 
 				<android.support.v7.widget.AppCompatRadioButton
 					android:id="@+id/activity_mainSSHProxyRadioButton"
 					android:layout_height="wrap_content"
 					android:layout_width="wrap_content"
-					android:hint="SSH + PROXY"/>
+					android:text="SSH مع وكيل"/>
 
 			</RadioGroup>
 
@@ -301,7 +301,7 @@
 				android:id="@+id/activity_mainCustomPayloadSwitch"
 				android:layout_height="wrap_content"
 				android:layout_width="wrap_content"
-				android:hint="Custom Payload"
+				android:text="نص اتصال مخصص"
 				android:layout_gravity="right"/>
 
 		</LinearLayout>
