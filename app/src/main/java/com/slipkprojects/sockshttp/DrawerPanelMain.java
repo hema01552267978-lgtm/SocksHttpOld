@@ -115,13 +115,6 @@ public class DrawerPanelMain
 				mActivity.startActivity(intent2);
 				break;
 
-			case R.id.miAvaliarPlaystore:
-				String url = "https://play.google.com/store/apps/details?id=com.slipkprojects.sockshttp";
-				Intent intent3 = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-				intent3.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-				mActivity.startActivity(Intent.createChooser(intent3, mActivity.getText(R.string.open_with)));
-				break;
-
 			case R.id.miSendFeedback:
 				if (false && Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 					try {
