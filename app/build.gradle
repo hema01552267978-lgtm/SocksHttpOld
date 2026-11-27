@@ -10,6 +10,12 @@ android {
         buildConfig true
     }
 
+    packaging {
+        resources {
+            excludes += ['META-INF/androidx.legacy_legacy-support-core-utils.version']
+        }
+    }
+
     defaultConfig {
         applicationId 'com.slipkprojects.sockshttp'
         minSdk 21
