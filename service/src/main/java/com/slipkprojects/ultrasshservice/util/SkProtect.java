@@ -51,8 +51,7 @@ public class SkProtect {
 	}*/
 	
 	public void simpleProtect() {
-		if (!APP_BASE.equals(mContext.getPackageName().toLowerCase()) ||
-				!mContext.getString(R.string.app_name).toLowerCase().equals("sockshttp")) {
+		if (!APP_BASE.equals(mContext.getPackageName().toLowerCase())) {
 			throw new RuntimeException();
 		}
 	}
