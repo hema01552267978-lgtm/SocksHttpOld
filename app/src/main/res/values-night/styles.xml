@@ -22,7 +22,7 @@
 	<!-- Alert Dialog -->
 	<style name="AppAlertDialog"
         	parent="Theme.AppCompat.Light.Dialog.Alert">
-		<item name="colorAccent">@color/colorAccent</item>
+		<item name="android:colorAccent">@color/colorAccent</item>
 		<item name="android:textColor">@color/colorText</item>
 		<item name="android:textColorSecondary">@color/textColorSecondary</item>
 		<item name="android:textColorHint">@color/colorText</item>
@@ -68,9 +68,9 @@
 	<style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Dark"/>
 		
 	<!-- Style for Splash Screen -->
-    <style name="SplashScreenTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <item name="colorPrimary">@color/colorPrimary</item>
-		<item name="colorPrimaryDark">@color/colorSecondary</item>
+    <style name="SplashScreenTheme" parent="@android:style/Theme.Material.NoActionBar">
+        
+		
 		<item name="colorAccent">@color/colorAccent</item>
 		<item name="android:windowBackground">@drawable/splash_screen_background</item>
 		<item name="android:navigationBarColor" tools:targetApi="21">@color/colorSecondary</item>
