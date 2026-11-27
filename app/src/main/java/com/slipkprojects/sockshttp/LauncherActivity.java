@@ -1,77 +1,88 @@
 package com.slipkprojects.sockshttp;
 
-import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import com.slipkprojects.sockshttp.preference.LocaleHelper;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.ByteArrayOutputStream;
-import android.os.Bundle;
-import com.slipkprojects.sockshttp.R;
-import com.slipkprojects.sockshttp.activities.BaseActivity;
+import java.io.FileWriter;
 
-/**
- * @author anuragdhunna
- */
-public class LauncherActivity extends BaseActivity
-{
+public class LauncherActivity extends AppCompatActivity {
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(LocaleHelper.setLocale(base));
+    }
+
+    private String readText(File file) throws Exception {
+        FileInputStream input = new FileInputStream(file);
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        byte[] buffer = new byte[2048];
+        int count;
+        while ((count = input.read(buffer)) != -1) {
+            output.write(buffer, 0, count);
+        }
+        input.close();
+        return output.toString("UTF-8");
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_splash_screen);
-        
-        final File stageFile = new File(getFilesDir(), "startup_stage.txt");
-        if (stageFile.exists()) {
-            try {
-                FileInputStream stageInput = new FileInputStream(stageFile);
-                ByteArrayOutputStream stageOutput = new ByteArrayOutputStream();
-                byte[] stageBuffer = new byte[1024];
-                int stageCount;
-                while ((stageCount = stageInput.read(stageBuffer)) != -1) stageOutput.write(stageBuffer, 0, stageCount);
-                stageInput.close();
-                final String previousStage = stageOutput.toString("UTF-8");
-                if (!previousStage.contains("MAIN_READY")) {
-                    new AlertDialog.Builder(this)
-                        .setTitle("تشخيص توقف التطبيق")
-                        .setMessage("آخر مرحلة وصل لها التطبيق قبل الإغلاق:\n\n" + previousStage)
-                        .setCancelable(false)
-                        .setPositiveButton("نسخ التشخيص وفتح التطبيق", (dialog, which) -> {
-                            ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                            clipboard.setPrimaryClip(ClipData.newPlainText("Startup diagnostic", previousStage));
-                            stageFile.delete();
-                            startMainScreen();
-                        })
-                        .setNegativeButton("فتح التطبيق", (dialog, which) -> {
-                            stageFile.delete();
-                            startMainScreen();
-                        })
-                        .show();
-                    return;
-                }
-            } catch (Exception ignored) { stageFile.delete(); }
+        File stageFile = new File(getFilesDir(), "startup_stage.txt");
+        String previousStage = null;
+        try {
+            if (stageFile.exists()) {
+                previousStage = readText(stageFile);
+            }
+        } catch (Exception ignored) {
         }
-        SocksHttpApp.markStartupStage(this, "LAUNCHER: splash displayed");
+
+        // Record entry before AppCompat setup so a failure here is visible next launch.
+        SocksHttpApp.markStartupStage(this, "LAUNCHER: onCreate entered");
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_splash_screen);
+
+        if (previousStage != null && !previousStage.contains("MAIN_READY")) {
+            final String diagnostic = previousStage;
+            new AlertDialog.Builder(this)
+                .setTitle("تشخيص توقف التطبيق")
+                .setMessage("آخر مرحلة وصل لها التطبيق قبل الإغلاق:\n\n" + diagnostic)
+                .setCancelable(false)
+                .setPositiveButton("نسخ التشخيص وفتح التطبيق", (dialog, which) -> {
+                    ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                    if (clipboard != null) {
+                        clipboard.setPrimaryClip(ClipData.newPlainText("Startup diagnostic", diagnostic));
+                    }
+                    stageFile.delete();
+                    startMainScreen();
+                })
+                .setNegativeButton("فتح التطبيق", (dialog, which) -> {
+                    stageFile.delete();
+                    startMainScreen();
+                })
+                .show();
+            return;
+        }
+
         final File crashFile = new File(getFilesDir(), "last_crash.txt");
         if (crashFile.exists()) {
             try {
-                FileInputStream input = new FileInputStream(crashFile);
-                ByteArrayOutputStream output = new ByteArrayOutputStream();
-                byte[] buffer = new byte[2048];
-                int count;
-                while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
-                input.close();
-                final String crashText = output.toString("UTF-8");
+                final String crashText = readText(crashFile);
                 new AlertDialog.Builder(this)
                     .setTitle("تم تسجيل خطأ في التشغيل")
                     .setMessage(crashText)
                     .setCancelable(false)
                     .setPositiveButton("نسخ الخطأ", (dialog, which) -> {
                         ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                        clipboard.setPrimaryClip(ClipData.newPlainText("Crash log", crashText));
+                        if (clipboard != null) {
+                            clipboard.setPrimaryClip(ClipData.newPlainText("Crash log", crashText));
+                        }
                         crashFile.delete();
                         startMainScreen();
                     })
@@ -81,13 +92,14 @@ public class LauncherActivity extends BaseActivity
                     })
                     .show();
                 return;
-            } catch (Exception ignored) { crashFile.delete(); }
+            } catch (Exception ignored) {
+                crashFile.delete();
+            }
         }
-		
-		// inicia atividade principal
+
         startMainScreen();
     }
-	
+
     private void startMainScreen() {
         Intent intent = new Intent(this, SocksHttpMainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
