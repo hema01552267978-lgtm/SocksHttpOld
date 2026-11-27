@@ -114,7 +114,7 @@ public class SocksHttpApp extends Application
 		try {
 			File stageFile = new File(context.getFilesDir(), "startup_stage.txt");
 			FileWriter writer = new FileWriter(stageFile, false);
-			writer.write(stage + "\\nAndroid SDK: " + Build.VERSION.SDK_INT + "\\nDevice: " + Build.MANUFACTURER + " " + Build.MODEL);
+			writer.write(stage + "\nAndroid SDK: " + Build.VERSION.SDK_INT + "\nDevice: " + Build.MANUFACTURER + " " + Build.MODEL);
 			writer.close();
 		} catch (Throwable ignored) { }
 	}
