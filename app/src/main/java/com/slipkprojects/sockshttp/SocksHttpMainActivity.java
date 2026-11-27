@@ -145,6 +145,7 @@ public class SocksHttpMainActivity extends BaseActivity
 	@Override
     protected void onCreate(@Nullable Bundle savedInstanceState)
     {
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         super.onCreate(savedInstanceState);
 
 		mHandler = new Handler();
