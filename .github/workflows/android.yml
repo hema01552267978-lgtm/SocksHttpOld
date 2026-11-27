@@ -17,27 +17,6 @@ jobs:
           java-version: '17'
           distribution: temurin
 
-      # Keep the app's declared minSdk/targetSdk unchanged.
-      # Only align the build tools with the existing Android Gradle files.
-      - name: Prepare build tools
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          wrapper = Path("gradle/wrapper/gradle-wrapper.properties")
-          if wrapper.exists():
-              text = wrapper.read_text()
-              text = re.sub(r'gradle-[0-9.]+-(all|bin)\.zip', 'gradle-8.7-all.zip', text)
-              wrapper.write_text(text)
-
-          root = Path("build.gradle")
-          if root.exists():
-              text = root.read_text()
-              text = re.sub(r'com\.android\.tools\.build:gradle:[0-9.]+', 'com.android.tools.build:gradle:8.6.1', text)
-              root.write_text(text)
-          PY
-
       - name: Build debug APK
         run: |
           chmod +x gradlew
