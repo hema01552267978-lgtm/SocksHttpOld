@@ -42,7 +42,7 @@
                 android:shadowDx="0"
                 android:shadowDy="0"
                 android:singleLine="true"
-                android:ellipsize="fit"/>
+                android:ellipsize="end"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
