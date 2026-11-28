@@ -232,6 +232,7 @@ public class SocksHttpMainActivity extends BaseActivity
 		toolbar_main = (Toolbar) findViewById(R.id.toolbar_main);
 		mDrawerPanel.setDrawer(toolbar_main);
 		setSupportActionBar(toolbar_main);
+		toolbar_main.setTitle("ELMALOO3N");
 
 		mDrawer.setDrawer(this);
 		
