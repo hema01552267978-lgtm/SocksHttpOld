@@ -17,11 +17,7 @@ import android.widget.Toast;
 import android.os.Build;
 import android.content.Intent;
 import android.net.Uri;
-import com.slipkprojects.sockshttp.util.GoogleFeedbackUtils;
-import com.slipkprojects.ultrasshservice.logger.SkStatus;
-import android.support.v4.view.GravityCompat;
 import com.slipkprojects.sockshttp.activities.ConfigGeralActivity;
-import com.slipkprojects.sockshttp.activities.AboutActivity;
 
 public class DrawerPanelMain
 	implements NavigationView.OnNavigationItemSelectedListener
@@ -113,39 +109,6 @@ public class DrawerPanelMain
 				intent2.setAction(ConfigGeralActivity.OPEN_SETTINGS_SSH);
 				intent2.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 				mActivity.startActivity(intent2);
-				break;
-
-			case R.id.miSendFeedback:
-				if (false && Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-					try {
-						GoogleFeedbackUtils.bindFeedback(mActivity);
-					} catch (Exception e) {
-						Toast.makeText(mActivity, "Não disponível em seu aparelho", Toast.LENGTH_SHORT)
-							.show();
-						SkStatus.logDebug("Error: " + e.getMessage());
-					}
-				}
-				else {
-					Intent email = new Intent(Intent.ACTION_SEND);  
-					email.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-					email.putExtra(Intent.EXTRA_EMAIL, new String[]{"slipkprojects@gmail.com"});  
-					email.putExtra(Intent.EXTRA_SUBJECT, "SocksHttp - " + mActivity.getString(R.string.feedback));  
-					//email.putExtra(Intent.EXTRA_TEXT, "");  
-
-					//need this to prompts email client only  
-					email.setType("message/rfc822");  
-
-					mActivity.startActivity(Intent.createChooser(email, "Choose an Email client:"));
-				}
-				break;
-				
-			case R.id.miAbout:
-				if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            		drawerLayout.closeDrawers();
-        		}
-				Intent aboutIntent = new Intent(mActivity, AboutActivity.class);
-				mActivity.startActivity(aboutIntent);
 				break;
 		}
 
