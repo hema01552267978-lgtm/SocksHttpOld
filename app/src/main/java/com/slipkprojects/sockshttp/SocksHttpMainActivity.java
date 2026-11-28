@@ -232,7 +232,7 @@ public class SocksHttpMainActivity extends BaseActivity
 		toolbar_main = (Toolbar) findViewById(R.id.toolbar_main);
 		mDrawerPanel.setDrawer(toolbar_main);
 		setSupportActionBar(toolbar_main);
-		toolbar_main.setTitle("ELMALOO3N");
+		toolbar_main.setTitle("ELMALOO3N VPN");
 
 		mDrawer.setDrawer(this);
 		
@@ -392,9 +392,9 @@ public class SocksHttpMainActivity extends BaseActivity
 			long hours = elapsed / 3600L;
 			long minutes = (elapsed % 3600L) / 60L;
 			long seconds = elapsed % 60L;
-			vpnElapsedText.setText(String.format(java.util.Locale.US, "مدة الاتصال: %02d:%02d:%02d", hours, minutes, seconds));
+			vpnElapsedText.setText(String.format(java.util.Locale.US, "%02d:%02d:%02d", hours, minutes, seconds));
 		} else {
-			vpnElapsedText.setText("مدة الاتصال: غير متصل");
+			vpnElapsedText.setText("غير متصل");
 		}
 		long now = System.currentTimeMillis();
 		long rx = TrafficStats.getTotalRxBytes();
@@ -403,9 +403,9 @@ public class SocksHttpMainActivity extends BaseActivity
 			long delta = Math.max(1L, now - lastSpeedSampleTime);
 			long down = lastRxBytes < 0L ? 0L : Math.max(0L, (rx - lastRxBytes) * 1000L / delta);
 			long up = lastTxBytes < 0L ? 0L : Math.max(0L, (tx - lastTxBytes) * 1000L / delta);
-			vpnSpeedText.setText("سرعة الجهاز: تنزيل " + formatRate(down) + " | رفع " + formatRate(up));
+			vpnSpeedText.setText("↓ " + formatRate(down) + "\n↑ " + formatRate(up));
 		} else {
-			vpnSpeedText.setText("سرعة الجهاز: جارٍ القياس...");
+			vpnSpeedText.setText("جارٍ القياس...");
 		}
 		lastRxBytes = rx;
 		lastTxBytes = tx;
@@ -416,12 +416,12 @@ public class SocksHttpMainActivity extends BaseActivity
 		if (configExpiryText == null || mConfig == null) return;
 		long expiry = mConfig.getPrefsPrivate().getLong(Settings.CONFIG_VALIDADE_KEY, 0L);
 		if (expiry <= 0L) {
-			configExpiryText.setText("صلاحية الكونفج: غير محددة");
+			configExpiryText.setText("غير محددة");
 			return;
 		}
 		long remaining = expiry - System.currentTimeMillis();
 		if (remaining <= 0L) {
-			configExpiryText.setText("صلاحية الكونفج: منتهية");
+			configExpiryText.setText("منتهية");
 			return;
 		}
 		long totalSeconds = remaining / 1000L;
@@ -430,7 +430,7 @@ public class SocksHttpMainActivity extends BaseActivity
 		long minutes = (totalSeconds % 3600L) / 60L;
 		long seconds = totalSeconds % 60L;
 		configExpiryText.setText(String.format(java.util.Locale.US,
-			"الوقت المتبقي للكونفج: %d يوم %02d:%02d:%02d", days, hours, minutes, seconds));
+			"%d يوم %02d:%02d:%02d", days, hours, minutes, seconds));
 	}
 
 	private String formatRate(long bytesPerSecond) {
