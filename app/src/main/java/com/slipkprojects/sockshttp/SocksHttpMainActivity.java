@@ -305,6 +305,52 @@ public class SocksHttpMainActivity extends BaseActivity
                 }
             });
         }
+
+        Button importConfigButton = (Button) findViewById(R.id.btn_import_config);
+        Button saveConfigButton = (Button) findViewById(R.id.btn_save_config);
+        Button exportConfigButton = (Button) findViewById(R.id.btn_export_config);
+
+        if (importConfigButton != null) {
+            importConfigButton.setOnClickListener(new View.OnClickListener() {
+                @Override public void onClick(View view) {
+                    if (SkStatus.isTunnelActive()) {
+                        Toast.makeText(SocksHttpMainActivity.this,
+                            R.string.error_tunnel_service_execution, Toast.LENGTH_SHORT).show();
+                    } else {
+                        startActivity(new Intent(SocksHttpMainActivity.this,
+                            ConfigImportFileActivity.class));
+                    }
+                }
+            });
+        }
+
+        if (saveConfigButton != null) {
+            saveConfigButton.setOnClickListener(new View.OnClickListener() {
+                @Override public void onClick(View view) {
+                    doSaveData();
+                    Toast.makeText(SocksHttpMainActivity.this,
+                        "تم حفظ الإعدادات الحالية", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        if (exportConfigButton != null) {
+            exportConfigButton.setOnClickListener(new View.OnClickListener() {
+                @Override public void onClick(View view) {
+                    SharedPreferences prefs = mConfig.getPrefsPrivate();
+                    if (SkStatus.isTunnelActive()) {
+                        Toast.makeText(SocksHttpMainActivity.this,
+                            R.string.error_tunnel_service_execution, Toast.LENGTH_SHORT).show();
+                    } else if (prefs.getBoolean(Settings.CONFIG_PROTEGER_KEY, false)) {
+                        Toast.makeText(SocksHttpMainActivity.this,
+                            R.string.error_settings_blocked, Toast.LENGTH_SHORT).show();
+                    } else {
+                        startActivity(new Intent(SocksHttpMainActivity.this,
+                            ConfigExportFileActivity.class));
+                    }
+                }
+            });
+        }
 	}
 	
 	private void updateConnectionStats() {
