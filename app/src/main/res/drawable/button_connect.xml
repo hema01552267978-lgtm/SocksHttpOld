@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="#88FFFFFF">
+<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="#99FFFFFF">
     <item>
         <shape android:shape="oval">
-            <gradient android:type="radial" android:gradientRadius="112dp" android:startColor="#FF080304" android:centerColor="#FF290508" android:endColor="#FFFF1018" />
-            <stroke android:width="5dp" android:color="#FFFF171F" />
+            <gradient android:type="radial" android:gradientRadius="130dp"
+                android:centerX="50%" android:centerY="42%"
+                android:startColor="#FFFF3548" android:centerColor="#FF9C1024"
+                android:endColor="#FF21050A" />
+            <stroke android:width="4dp" android:color="#FFFF4658" />
+            <padding android:left="5dp" android:top="5dp" android:right="5dp" android:bottom="5dp" />
         </shape>
     </item>
 </ripple>
