@@ -13,9 +13,9 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center_horizontal"
-        android:paddingStart="9dp"
-        android:paddingEnd="9dp"
-        android:paddingTop="7dp"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingTop="3dp"
         android:paddingBottom="12dp"
         android:focusable="true"
         android:focusableInTouchMode="true">
@@ -26,8 +26,8 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:gravity="center"
-            android:paddingTop="5dp"
-            android:paddingBottom="8dp">
+            android:paddingTop="1dp"
+            android:paddingBottom="5dp">
             <TextView
                 android:id="@+id/activity_mainAutorText"
                 android:layout_width="match_parent"
@@ -35,7 +35,7 @@
                 android:text="✹⃝𝑰🇵🇸⃝𝑬𝑳M𝑨𝑳oo3n✯"
                 android:textColor="#FFFFFFFF"
                 android:textStyle="bold"
-                android:textSize="21sp"
+                android:textSize="22sp"
                 android:gravity="center"
                 android:shadowColor="#FFFF1028"
                 android:shadowRadius="12"
@@ -43,16 +43,6 @@
                 android:shadowDy="0"
                 android:singleLine="true"
                 android:ellipsize="end"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🔥  ELMALOO3N VPN  🔥"
-                android:textColor="#FFFFE8EA"
-                android:textStyle="bold"
-                android:textSize="13sp"
-                android:gravity="center"
-                android:shadowColor="#FFFF001A"
-                android:shadowRadius="7"/>
         </LinearLayout>
 
         <!-- Main connection control with live side counters -->
@@ -65,7 +55,7 @@
 
             <LinearLayout
                 android:layout_width="0dp"
-                android:layout_height="94dp"
+                android:layout_height="104dp"
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
@@ -106,8 +96,8 @@
                 android:padding="3dp">
                 <Button
                     android:id="@+id/activity_starterButtonMain"
-                    android:layout_width="116dp"
-                    android:layout_height="116dp"
+                    android:layout_width="124dp"
+                    android:layout_height="124dp"
                     android:background="@drawable/button_connect"
                     android:backgroundTint="@null"
                     android:text="⏻\nاتصال"
@@ -120,7 +110,7 @@
 
             <LinearLayout
                 android:layout_width="0dp"
-                android:layout_height="112dp"
+                android:layout_height="104dp"
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
@@ -209,7 +199,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="7dp"
-            android:layout_marginTop="7dp"
+            android:layout_marginTop="9dp"
             android:background="@drawable/panel_glass"
             android:clickable="true"
             android:focusable="true">
@@ -423,7 +413,7 @@
                 android:layout_weight="1"
                 android:layout_margin="3dp"
                 android:minWidth="0dp"
-                android:text="📂 استيراد"
+                android:text="استيراد"
                 android:textColor="#FFFFFFFF"
                 android:textSize="11sp"
                 android:textStyle="bold"
@@ -449,7 +439,7 @@
                 android:layout_weight="1"
                 android:layout_margin="3dp"
                 android:minWidth="0dp"
-                android:text="📤 تصدير"
+                android:text="تصدير"
                 android:textColor="#FFFFFFFF"
                 android:textSize="11sp"
                 android:textStyle="bold"
