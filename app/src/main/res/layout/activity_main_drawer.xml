@@ -12,9 +12,9 @@
 	<LinearLayout
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:gravity="center_horizontal|center_vertical"
+		android:gravity="center_horizontal|top"
 		android:orientation="vertical"
-		android:background="#050204">
+		android:background="#FF050204">
 
 		<include
 			android:layout_height="wrap_content"
